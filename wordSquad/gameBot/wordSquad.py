@@ -1,7 +1,7 @@
-from nltk.corpus import words
 from random import random
 from PIL import Image, ImageDraw, ImageFont
 from tempfile import SpooledTemporaryFile
+from mongoengine import Document, fields
 
 import re
 
@@ -41,8 +41,7 @@ class WordGuess:
             return png_data
 
 
-class WordSquadGame:
-    def __init__(self) -> None:
-        self.words5 = [x for x in words.words('en') if re.match( '^[a-z]{5}$', x)]
-        self.secret_word = self.words5[int((len(self.words5) - 1) * random())]
-        self.guesses = []
+class WordSquadGame(Document):
+    channel_id = fields.IntField()
+    secret_word = fields.StringField()
+    solved = fields.BooleanField(default=False)
