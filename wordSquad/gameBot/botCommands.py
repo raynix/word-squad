@@ -39,13 +39,24 @@ def game(update: Update, context: CallbackContext) -> None:
         game_session = WordSquadGame()
         game_session.secret_word = words5[int((len(words5) - 1) * random())]
         game_session.channel_id = channel_id
+        game_session.bury_treasures()
         game_session.save()
         update.message.reply_text(f'New game started: {len(game_session.secret_word)} letters.')
+        # update.message.reply_text(f'{game_session.secret_word}')
     else:
         update.message.reply_text(f'Game already started.')
+        game_session.delete()
 
 
 def guess(update: Update, context: CallbackContext) -> None:
+    user = TgUser.objects(tg_id=update.message.from_user.id).first()
+    if user is None:
+        user = TgUser(
+            id = update.message.from_user.id,
+            name=f'{update.message.from_user.first_name or ""} {update.message.from_user.last_name or ""}',
+        )
+        user.save()
+
     text = update.message.text.lower()
     if not Word.is_english(text):
         update.message.reply_text("Is this an English word?", reply_to_message_id=update.message.message_id)
@@ -53,9 +64,11 @@ def guess(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
-        new_guess = WordGuess(game_session.secret_word, update.message.text)
+        new_guess = WordGuess(game_session, update.message.text, user)
         update.message.reply_photo(new_guess.draw())
         if text == game_session.secret_word:
             update.message.reply_text("Great guess!")
             game_session.solved = True
+            game_session.add_score(user, SCORES['game'])
             game_session.save()
+            update.message.reply_text(game_session.print_score())

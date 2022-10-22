@@ -9,6 +9,12 @@ CORRECT_LETTER = 2
 MISPLACE_LETTER = 1
 WRONG_LETTER = 0
 
+SCORES = {
+    'accurate': 10,
+    'splash': 5,
+    'game': 20
+}
+
 colors = [
     (188,188,188),
     (220,220,60),
@@ -17,14 +23,18 @@ colors = [
 
 class WordGuess:
 
-    def __init__(self, secret, guess) -> None:
+    def __init__(self, game_session, guess, user) -> None:
         self.guess = guess
         self.results = {}
         for idx, letter in enumerate(guess):
-            if letter == secret[idx]:
+            # letter guessed accurately
+            if letter == game_session.secret_word[idx]:
                 self.results[idx] = CORRECT_LETTER
-            elif letter in secret:
+                game_session.claim_treasure('accurate', user, idx)
+            # letter guessed but in wrong location
+            elif letter in game_session.secret_word:
                 self.results[idx] = MISPLACE_LETTER
+                game_session.claim_treasure('splash', user, idx)
             else:
                 self.results[idx] = WRONG_LETTER
 
@@ -45,3 +55,30 @@ class WordSquadGame(Document):
     channel_id = fields.IntField()
     secret_word = fields.StringField()
     solved = fields.BooleanField(default=False)
+    treasures = fields.ListField(default = [])
+    scores = fields.DictField(default = {})
+
+    def claim_treasure(self, claim_type, user, treasure_idx):
+        if claim_type == 'accurate' and self.treasures[treasure_idx][claim_type] is None:
+            self.treasures[treasure_idx][claim_type] = user
+        elif self.treasures[treasure_idx]['accurate'] is None and self.treasures[treasure_idx][claim_type] is None:
+            self.treasures[treasure_idx][claim_type] = user
+        self.add_score(user, SCORES[claim_type])
+        self.save()
+
+    def add_score(self, user, score):
+        if user.name in self.scores.keys():
+            self.scores[user.name] += score
+        else:
+            self.scores[user.name] = score
+
+    def bury_treasures(self):
+        if self.secret_word:
+            for idx, v in enumerate(self.secret_word):
+                self.treasures.append({
+                    'letter': v,
+                    'splash': None,
+                    'accurate': None
+                })
+    def print_score(self):
+        return 'Game scores: \n' + '\n'.join([f'{k}: {v}' for k, v in self.scores.items()])
