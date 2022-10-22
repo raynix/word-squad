@@ -61,9 +61,10 @@ class WordSquadGame(Document):
     def claim_treasure(self, claim_type, user, treasure_idx):
         if claim_type == 'accurate' and self.treasures[treasure_idx][claim_type] is None:
             self.treasures[treasure_idx][claim_type] = user
+            self.add_score(user, SCORES[claim_type])
         elif self.treasures[treasure_idx]['accurate'] is None and self.treasures[treasure_idx][claim_type] is None:
             self.treasures[treasure_idx][claim_type] = user
-        self.add_score(user, SCORES[claim_type])
+            self.add_score(user, SCORES[claim_type])
         self.save()
 
     def add_score(self, user, score):

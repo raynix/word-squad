@@ -47,6 +47,12 @@ def game(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f'Game already started.')
         game_session.delete()
 
+def game_score(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    if game_session is not None:
+        update.message.reply_text(game_session.print_score())
+
 
 def guess(update: Update, context: CallbackContext) -> None:
     user = TgUser.objects(tg_id=update.message.from_user.id).first()

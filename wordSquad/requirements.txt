@@ -3,3 +3,4 @@ psycopg2-binary==2.9.3
 python-telegram-bot==13.13
 nltk==3.7
 mysqlclient==2.1.1
+mongoengine~=0.24
