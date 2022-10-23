@@ -33,6 +33,8 @@ jobs:
           tags: ghcr.io/raynix/word-squad:${{ env.build_tag }}
       - name: Update deployment version
         run: |
+          pwd
+          ls -lht
           sed -i -E "s|(image: ghcr.io/raynix/word-squad:).*|\1${{ env.build_tag }}|g" .kustomize/deploy.yaml
       - name: Auto commit & push changes
         run: |
