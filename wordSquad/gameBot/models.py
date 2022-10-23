@@ -15,6 +15,6 @@ class Word(models.Model):
          return False
 
 class TgUser(Document):
+   tg_user_id = fields.IntField(primary=True)
    name = fields.StringField()
-   tg_id = fields.IntField()
    address = fields.StringField()

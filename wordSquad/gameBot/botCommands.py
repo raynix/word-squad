@@ -55,10 +55,10 @@ def game_score(update: Update, context: CallbackContext) -> None:
 
 
 def guess(update: Update, context: CallbackContext) -> None:
-    user = TgUser.objects(tg_id=update.message.from_user.id).first()
+    user = TgUser.objects(tg_user_id=update.message.from_user.id).first()
     if user is None:
         user = TgUser(
-            id = update.message.from_user.id,
+            tg_user_id = update.message.from_user.id,
             name=f'{update.message.from_user.first_name or ""} {update.message.from_user.last_name or ""}',
         )
         user.save()
