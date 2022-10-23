@@ -10,4 +10,4 @@ USER nobody
 ENV DJANGO_SETTINGS_MODULE=change_me
 ENV BOT_TOKEN=change_me
 
-ENTRYPOINT ['python', 'bot.py']
+ENTRYPOINT ["/usr/local/bin/python", "./bot.py"]
