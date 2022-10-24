@@ -23,8 +23,8 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def debug(update: Update, context: CallbackContext) -> None:
     """Debugging function"""
-    print(update)
-    print(context)
+    logger.info(update)
+    logger.info(context)
 
 
 def main() -> None:

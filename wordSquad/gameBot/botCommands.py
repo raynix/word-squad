@@ -10,7 +10,6 @@ from random import random
 import re
 
 words5 = [ w.word for w in Word.objects.filter(word__regex = r'^[a-z]{5}$')[:100]]
-print(words5)
 
 def users(update: Update, context: CallbackContext) -> None:
     users = TgUser.objects.all()
