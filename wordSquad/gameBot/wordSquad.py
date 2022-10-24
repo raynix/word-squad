@@ -58,6 +58,9 @@ class WordSquadGame(Document):
     treasures = fields.ListField(default = [])
     scores = fields.DictField(default = {})
 
+    def __str__(self):
+        return f'{self.channel_id}:{self.secret_word}:{self.solved}'
+
     def claim_treasure(self, claim_type, user, treasure_idx):
         if claim_type == 'accurate' and self.treasures[treasure_idx][claim_type] is None:
             self.treasures[treasure_idx][claim_type] = user

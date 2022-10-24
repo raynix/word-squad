@@ -1,4 +1,5 @@
 import os
+import logging
 
 from gameBot.models import *
 from gameBot.wordSquad import *
@@ -8,6 +9,11 @@ from telegram.ext import CallbackContext
 
 from random import random
 import re
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 words5 = [ w.word for w in Word.objects.filter(word__regex = r'^[a-z]{5}$')[:100]]
 
@@ -63,11 +69,14 @@ def guess(update: Update, context: CallbackContext) -> None:
         user.save()
 
     text = update.message.text.lower()
+    logger.info(f'guessed {text} by {user.name}')
     if not Word.is_english(text):
         update.message.reply_text("Is this an English word?", reply_to_message_id=update.message.message_id)
         return
-    channel_id = update.effective_chat.id
+    channel_id = update.effective_message.chat_id
+    logger.info(f'channel id is {channel_id}')
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    logger.info(game_session)
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         new_guess = WordGuess(game_session, update.message.text, user)
         update.message.reply_photo(new_guess.draw(), reply_to_message_id=update.message.message_id)
