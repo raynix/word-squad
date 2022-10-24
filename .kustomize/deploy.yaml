@@ -12,6 +12,7 @@ spec:
       labels:
         app: word-squad
     spec:
+      revisionHistoryLimit: 3
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

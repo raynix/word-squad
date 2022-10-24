@@ -38,7 +38,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('adduser', add_user))
     dispatcher.add_handler(CommandHandler('game', game))
     dispatcher.add_handler(CommandHandler('gamescore', game_score))
-    dispatcher.add_handler(MessageHandler(Filters.text, guess))
+    dispatcher.add_handler(MessageHandler(Filters.text | Filters.reply, guess))
     dispatcher.add_handler(MessageHandler(Filters.all, debug))
     # dispatcher.add_handler(CommandHandler('help', help_handler))
 

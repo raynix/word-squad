@@ -13,6 +13,7 @@ spec:
       labels:
         app: oewn-mysql
     spec:
+      revisionHistoryLimit: 1
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
