@@ -70,7 +70,7 @@ def guess(update: Update, context: CallbackContext) -> None:
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         new_guess = WordGuess(game_session, update.message.text, user)
-        update.message.reply_photo(new_guess.draw())
+        update.message.reply_photo(new_guess.draw(), reply_to_message_id=update.message.message_id)
         if text == game_session.secret_word:
             update.message.reply_text("Great guess!")
             game_session.solved = True
