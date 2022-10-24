@@ -33,6 +33,7 @@ def main() -> None:
     updater = Updater(os.environ["BOT_TOKEN"])
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler('start', start))
+    dispatcher.add_handler(CommandHandler('debug', debug))
     dispatcher.add_handler(CommandHandler('users', users))
     dispatcher.add_handler(CommandHandler('adduser', add_user))
     dispatcher.add_handler(CommandHandler('game', game))
