@@ -67,17 +67,15 @@ def guess(update: Update, context: CallbackContext) -> None:
             name=f'{update.message.from_user.first_name or ""} {update.message.from_user.last_name or ""}',
         )
         user.save()
-
     text = update.message.text.lower()
-    logger.info(f'guessed {text} by {user.name}')
-    if not Word.is_english(text):
-        update.message.reply_text("Is this an English word?", reply_to_message_id=update.message.message_id)
-        return
+    logger.debug(f'guessed {text} by {user.name}')
     channel_id = update.effective_message.chat_id
-    logger.info(f'channel id is {channel_id}')
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
-    logger.info(game_session)
+    logger.debug(game_session)
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
+        if not Word.is_english(text):
+            update.message.reply_text("Is this an English word?", reply_to_message_id=update.message.message_id)
+            return
         new_guess = WordGuess(game_session, update.message.text, user)
         update.message.reply_photo(new_guess.draw(), reply_to_message_id=update.message.message_id)
         if text == game_session.secret_word:
