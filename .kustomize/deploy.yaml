@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: word-squad
 spec:
+  revisionHistoryLimit: 3
   replicas: 1
   selector:
     matchLabels:
@@ -12,7 +13,6 @@ spec:
       labels:
         app: word-squad
     spec:
-      revisionHistoryLimit: 3
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
