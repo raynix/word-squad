@@ -53,7 +53,7 @@ def game(update: Update, context: CallbackContext) -> None:
 def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
-    if game_session is not None:
+    if game_session:
         update.message.reply_text(game_session.print_score())
 
 
@@ -65,21 +65,25 @@ def guess(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     logger.debug(game_session)
-    if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
+    if game_session and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         if not Word.is_english(text):
             message.reply_text("Is this an English word?", reply_to_message_id=message.message_id)
             return
         new_guess = WordGuess(game_session, update.message.text, user)
         message.reply_photo(new_guess.draw(), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
+            secret_word = Word.objects.filter(word=game_session.secret_word).first()
             message.reply_text("Great guess!")
             game_session.solved = True
             game_session.add_score(user, SCORES['game'])
             game_session.save()
             message.reply_text(game_session.print_score())
+            message.reply_text(f"Meanings of the word {secret_word}:")
+            message.reply_text('\n'.join(secret_word.meanings()))
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
-    if game_session is not None:
-        update.message.reply_text(','.join(Word.synonyms(game_session.secret_word)) or "No synonyms found.")
+    if game_session:
+        secret_word = Word.objects.filter(word=game_session.secret_word).first()
+        update.message.reply_text(','.join(secret_word.synonyms()) or "No synonyms found.")

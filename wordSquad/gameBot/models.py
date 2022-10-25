@@ -15,6 +15,9 @@ class Word(models.Model):
    wordid = models.AutoField(primary_key=True)
    word = models.CharField()
 
+   def __str__(self) -> str:
+      return self.word
+
    def difficulty(self):
       with connection.cursor() as cursor:
          cursor.execute("select count(sw2.word) as count FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw.wordid <> sw2.wordid AND sw.word = '{self.word}'")
@@ -30,6 +33,16 @@ class Word(models.Model):
          else:
             return 'Easy'
 
+   def synonyms(self):
+      with connection.cursor() as cursor:
+         cursor.execute(f"select sw2.word FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw2.wordid <> sw.wordid AND sw.word = '{self.word}' LIMIT 3")
+         return [ w.word for w in namedtuplefetchall(cursor) ]
+
+   def meanings(self):
+      with connection.cursor() as cursor:
+         cursor.execute(f"SELECT definition FROM words LEFT JOIN senses USING (wordid) LEFT JOIN synsets USING (synsetid) WHERE word = '{self.word}' ORDER BY posid,sensenum;")
+         return [ w.definition for w in namedtuplefetchall(cursor) ]
+
    @classmethod
    def is_english(cls, input):
       if cls.objects.filter(word=input).first():
@@ -41,11 +54,6 @@ class Word(models.Model):
    def pick_one(cls, length):
       return cls.objects.raw(f"select * from words where word regexp '^[a-z]{{{length}}}$' order by rand() limit 1")[0]
 
-   @classmethod
-   def synonyms(cls, word):
-      with connection.cursor() as cursor:
-         cursor.execute(f"select sw2.word FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw2.wordid <> sw.wordid AND sw.word = '{word}' LIMIT 3")
-         return [ w.word for w in namedtuplefetchall(cursor) ]
 
 class TgUser(Document):
    tg_user_id = fields.IntField(primary=True)
