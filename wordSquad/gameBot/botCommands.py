@@ -15,8 +15,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-words5 = [ w.word for w in Word.objects.filter(word__regex = r'^[a-z]{5}$')[:100]]
-
 def users(update: Update, context: CallbackContext) -> None:
     users = TgUser.objects.all()
     if len(users) == 0:
@@ -40,16 +38,16 @@ def game(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
     if game_session is None:
-        global words5
+        picked_word = Word.pick_one(5)
         game_session = WordSquadGame()
-        game_session.secret_word = words5[int((len(words5) - 1) * random())]
+        game_session.secret_word = picked_word.word
         game_session.channel_id = channel_id
         game_session.bury_treasures()
         game_session.save()
-        update.message.reply_text(f'New game started: {len(game_session.secret_word)} letters.')
+        update.message.reply_text(f'New game started: {len(game_session.secret_word)} letters. Difficulty: {picked_word.difficulty()}')
         # update.message.reply_text(f'{game_session.secret_word}')
     else:
-        update.message.reply_text(f'Game already started.')
+        update.message.reply_text(f'Stopped current game.')
         game_session.delete()
 
 def game_score(update: Update, context: CallbackContext) -> None:
@@ -84,3 +82,9 @@ def guess(update: Update, context: CallbackContext) -> None:
             game_session.add_score(user, SCORES['game'])
             game_session.save()
             update.message.reply_text(game_session.print_score())
+
+def synonyms(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    if game_session is not None:
+        update.message.reply_text(','.join(Word.synonyms(game_session.secret_word)) or "No synonyms found.")
