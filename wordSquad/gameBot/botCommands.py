@@ -36,7 +36,7 @@ def add_user(update: Update, context: CallbackContext) -> None:
 
 def game(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    game_session = WordSquadGame.current_game(channel_id)
     if game_session is None:
         picked_word = Word.pick_one(5)
         game_session = WordSquadGame()
@@ -52,7 +52,7 @@ def game(update: Update, context: CallbackContext) -> None:
 
 def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    game_session = WordSquadGame.current_game(channel_id)
     if game_session is not None:
         update.message.reply_text(game_session.print_score())
 
@@ -63,7 +63,7 @@ def guess(update: Update, context: CallbackContext) -> None:
     text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    game_session = WordSquadGame.current_game(channel_id)
     logger.debug(game_session)
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         if not Word.is_english(text):
@@ -80,6 +80,6 @@ def guess(update: Update, context: CallbackContext) -> None:
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
+    game_session = WordSquadGame.current_game(channel_id)
     if game_session is not None:
         update.message.reply_text(','.join(Word.synonyms(game_session.secret_word)) or "No synonyms found.")

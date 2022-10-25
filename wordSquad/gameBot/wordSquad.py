@@ -86,3 +86,7 @@ class WordSquadGame(Document):
                 })
     def print_score(self):
         return 'Game scores: \n' + '\n'.join([f'{k}: {v}' for k, v in self.scores.items()])
+
+    @classmethod
+    def current_game(cls, channel_id):
+        return cls.objects(channel_id = channel_id, solved = False).first()
