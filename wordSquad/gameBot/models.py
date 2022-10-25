@@ -44,10 +44,21 @@ class Word(models.Model):
    @classmethod
    def synonyms(cls, word):
       with connection.cursor() as cursor:
-         cursor.execute(f"select sw2.word FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw2.word <> sw.word AND sw.word = '{word}' LIMIT 3")
+         cursor.execute(f"select sw2.word FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw2.wordid <> sw.wordid AND sw.word = '{word}' LIMIT 3")
          return [ w.word for w in namedtuplefetchall(cursor) ]
 
 class TgUser(Document):
    tg_user_id = fields.IntField(primary=True)
    name = fields.StringField()
    address = fields.StringField()
+
+   @classmethod
+   def find_or_create(cls, tg_user_id, first_name, last_name):
+      user = TgUser.objects(tg_user_id=tg_user_id).first()
+      if user is None:
+         user = TgUser(
+            tg_user_id = tg_user_id,
+            name=f'{first_name or ""} {last_name or ""}',
+         )
+         user.save()
+      return user

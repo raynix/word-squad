@@ -58,30 +58,25 @@ def game_score(update: Update, context: CallbackContext) -> None:
 
 
 def guess(update: Update, context: CallbackContext) -> None:
-    user = TgUser.objects(tg_user_id=update.message.from_user.id).first()
-    if user is None:
-        user = TgUser(
-            tg_user_id = update.message.from_user.id,
-            name=f'{update.message.from_user.first_name or ""} {update.message.from_user.last_name or ""}',
-        )
-        user.save()
-    text = update.message.text.lower()
+    message = update.message
+    user = TgUser.find_or_create(message.from_user.id, message.from_user.first_name, message.from_user.last_name)
+    text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
-    channel_id = update.effective_message.chat_id
+    channel_id = update.effective_chat.id
     game_session = WordSquadGame.objects(channel_id = channel_id, solved = False).first()
     logger.debug(game_session)
     if game_session is not None and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         if not Word.is_english(text):
-            update.message.reply_text("Is this an English word?", reply_to_message_id=update.message.message_id)
+            message.reply_text("Is this an English word?", reply_to_message_id=message.message_id)
             return
         new_guess = WordGuess(game_session, update.message.text, user)
-        update.message.reply_photo(new_guess.draw(), reply_to_message_id=update.message.message_id)
+        message.reply_photo(new_guess.draw(), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
-            update.message.reply_text("Great guess!")
+            message.reply_text("Great guess!")
             game_session.solved = True
             game_session.add_score(user, SCORES['game'])
             game_session.save()
-            update.message.reply_text(game_session.print_score())
+            message.reply_text(game_session.print_score())
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
