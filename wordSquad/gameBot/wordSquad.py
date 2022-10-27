@@ -46,7 +46,7 @@ class WordGuess:
 
     def draw(self, size=100):
         with SpooledTemporaryFile() as in_memory_file:
-            img = Image.new('RGB', (size*len(self.guess), size), color = (240,240,240))
+            img = Image.new('RGB', (size*len(self.guess), 2 * size), color = (240,240,240))
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
             draw = ImageDraw.Draw(img)
             for idx, correctness in self.results.items():
