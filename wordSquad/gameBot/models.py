@@ -20,7 +20,7 @@ class Word(models.Model):
 
    def difficulty(self):
       with connection.cursor() as cursor:
-         cursor.execute("select count(sw2.word) as count FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw.wordid <> sw2.wordid AND sw.word = '{self.word}'")
+         cursor.execute(f"select count(sw2.word) as count FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw.wordid <> sw2.wordid AND sw.word = '{self.word}'")
          synonyms_count = namedtuplefetchall(cursor)[0].count
          if synonyms_count == 0:
             return 'Ultra hard!'
@@ -36,12 +36,12 @@ class Word(models.Model):
    def synonyms(self):
       with connection.cursor() as cursor:
          cursor.execute(f"select sw2.word FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw2.wordid <> sw.wordid AND sw.word = '{self.word}' LIMIT 3")
-         return [ w.word for w in namedtuplefetchall(cursor) ]
+         return [ w.word for w in namedtuplefetchall(cursor) if self.word not in w.word ]
 
    def meanings(self):
       with connection.cursor() as cursor:
          cursor.execute(f"SELECT definition FROM words LEFT JOIN senses USING (wordid) LEFT JOIN synsets USING (synsetid) WHERE word = '{self.word}' ORDER BY posid,sensenum;")
-         return [ w.definition for w in namedtuplefetchall(cursor) ]
+         return [ f"- {w.definition}" for w in namedtuplefetchall(cursor) ]
 
    @classmethod
    def is_english(cls, input):

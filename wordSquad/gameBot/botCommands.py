@@ -73,13 +73,12 @@ def guess(update: Update, context: CallbackContext) -> None:
         message.reply_photo(new_guess.draw(200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
             secret_word = Word.objects.filter(word=game_session.secret_word).first()
-            message.reply_text("Great guess!")
+            message.reply_text(f"You got it! Meanings of the word {secret_word}:")
+            message.reply_text('\n'.join(secret_word.meanings()))
             game_session.solved = True
             game_session.add_score(user, SCORES['game'])
             game_session.save()
             message.reply_text(game_session.print_score())
-            message.reply_text(f"Meanings of the word {secret_word}:")
-            message.reply_text('\n'.join(secret_word.meanings()))
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
