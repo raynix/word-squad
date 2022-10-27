@@ -48,7 +48,7 @@ def game(update: Update, context: CallbackContext) -> None:
         update.message.reply_text('Synonyms: ' + (', '.join(picked_word.synonyms()) or "0 synonym found."))
         # update.message.reply_text(f'{game_session.secret_word}')
     else:
-        update.message.reply_text(f'Stopped current game.')
+        update.message.reply_text(f'The current game has been abandoned.')
         game_session.delete()
 
 def game_score(update: Update, context: CallbackContext) -> None:
