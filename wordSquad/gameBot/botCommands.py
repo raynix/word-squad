@@ -72,7 +72,7 @@ def guess(update: Update, context: CallbackContext) -> None:
         if not Word.is_english(text):
             message.reply_text("Is this an English word?", reply_to_message_id=message.message_id)
             return
-        new_guess = WordGuess(game_session, update.message.text, user)
+        new_guess = WordGuess(game_session, text, user)
         message.reply_photo(new_guess.draw(200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
             secret_word = Word.objects.filter(word=game_session.secret_word).first()
