@@ -39,6 +39,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('game', game))
     dispatcher.add_handler(CommandHandler('gamescore', game_score))
     dispatcher.add_handler(CommandHandler('synonyms', synonyms))
+    dispatcher.add_handler(CommandHandler('stats', stats))
     dispatcher.add_handler(MessageHandler(Filters.text, guess))
     # dispatcher.add_handler(CommandHandler('help', help_handler))
 

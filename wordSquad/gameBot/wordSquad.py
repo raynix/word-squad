@@ -97,3 +97,10 @@ class WordSquadGame(Document):
     @classmethod
     def current_game(cls, channel_id):
         return cls.objects(channel_id = channel_id, solved = False).first()
+
+    @classmethod
+    def total_games(cls, channel_id=None):
+        if channel_id:
+            return cls.objects.filter(channel_id=channel_id).count()
+        else:
+            return cls.objects.count()

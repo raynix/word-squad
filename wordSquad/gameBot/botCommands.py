@@ -87,3 +87,8 @@ def synonyms(update: Update, context: CallbackContext) -> None:
     if game_session:
         secret_word = Word.objects.filter(word=game_session.secret_word).first()
         update.message.reply_text(','.join(secret_word.synonyms()) or "No synonyms found.")
+
+def stats(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    update.message.reply_text(f'Total games recorded: {WordSquadGame.total_games()}')
+    update.message.reply_text(f'Total games in this channel: {WordSquadGame.total_games(channel_id)}')
