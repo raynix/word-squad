@@ -44,8 +44,10 @@ def game(update: Update, context: CallbackContext) -> None:
         game_session.channel_id = channel_id
         game_session.bury_treasures()
         game_session.save()
-        update.message.reply_text(f'New game started: {len(game_session.secret_word)} letters. Difficulty: {picked_word.difficulty()}')
-        update.message.reply_text('Synonyms: ' + (', '.join(picked_word.synonyms()) or "0 synonym found."))
+        update.message.reply_text(
+            f'New game started: {len(game_session.secret_word)} letters. Difficulty: {picked_word.difficulty()}\n' +
+            'Synonyms: ' + (', '.join(picked_word.synonyms()) or "0 synonym found.")
+        )
         # update.message.reply_text(f'{game_session.secret_word}')
     else:
         update.message.reply_text(f'The current game has been abandoned.')
@@ -74,8 +76,10 @@ def guess(update: Update, context: CallbackContext) -> None:
         message.reply_photo(new_guess.draw(200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
             secret_word = Word.objects.filter(word=game_session.secret_word).first()
-            message.reply_text(f"You got it! Meanings of the word {secret_word}:")
-            message.reply_text('\n'.join(secret_word.meanings()))
+            message.reply_text(
+                f"You got it! Meanings of the word {secret_word}:\n" +
+                '\n'.join(secret_word.meanings())
+            )
             game_session.solved = True
             game_session.add_score(user, SCORES['game'])
             game_session.save()
@@ -90,5 +94,7 @@ def synonyms(update: Update, context: CallbackContext) -> None:
 
 def stats(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    update.message.reply_text(f'Total games recorded: {WordSquadGame.total_games()}')
-    update.message.reply_text(f'Total games in this channel: {WordSquadGame.total_games(channel_id)}')
+    update.message.reply_text(
+        f'Total games recorded: {WordSquadGame.total_games()}\n' +
+        f'Total games in this channel: {WordSquadGame.total_games(channel_id)}'
+    )
