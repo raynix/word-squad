@@ -92,7 +92,10 @@ class WordSquadGame(Document):
                     'accurate': None
                 })
     def print_score(self):
-        return 'Game scores: \n' + '\n'.join([f'{k}: {v}' for k, v in self.scores.items()])
+        return (
+            'Game scores: \n' +
+            '\n'.join([f'{k}: {v}' for k, v in sorted(self.scores.items(), key=lambda item: item[1], reverse=True)])
+        )
 
     @classmethod
     def current_game(cls, channel_id):
