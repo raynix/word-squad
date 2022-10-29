@@ -1,4 +1,5 @@
 import os
+import subprocess
 import logging
 
 from gameBot.models import *
@@ -103,4 +104,16 @@ def stats(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         f'Total games recorded: {WordSquadGame.total_games()}\n' +
         f'Total games in this channel: {WordSquadGame.total_games(channel_id)}'
+    )
+
+def info(update: Update, context: CallbackContext) -> None:
+    try:
+        with open('/app/build-time') as f:
+            build_time = f.read()
+    except:
+        build_time = 'Timestamp not found.'
+    output = subprocess.run(['uptime'], stdout=subprocess.PIPE)
+    update.message.reply_text(
+        f'Build-time: {build_time}\n' +
+        f"Uptime: {output.stdout.decode('utf-8')}"
     )

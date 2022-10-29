@@ -5,7 +5,8 @@ COPY ./wordSquad/requirements.txt .
 RUN pip3 install -r requirements.txt
 
 COPY ./wordSquad/ ./
-RUN chown -R nobody /app
+RUN chown -R nobody /app && \
+    date > /app/build-time
 USER nobody
 ENV DJANGO_SETTINGS_MODULE=change_me
 ENV BOT_TOKEN=change_me
