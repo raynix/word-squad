@@ -50,8 +50,14 @@ def game(update: Update, context: CallbackContext) -> None:
         )
         # update.message.reply_text(f'{game_session.secret_word}')
     else:
-        update.message.reply_text(f'The current game has been abandoned.')
+        update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters.')
+
+def endgame(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    game_session = WordSquadGame.current_game(channel_id)
+    if game_session:
         game_session.delete()
+        update.message.reply_text('The current game has been abandoned. Use /game to start a new one.')
 
 def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
