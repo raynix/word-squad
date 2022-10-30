@@ -17,14 +17,14 @@ SCORES = {
 
 FONT_COLORS = [
     (168,168,168),
-    (60,60,60),
+    (10,10,10),
     (10,10,10)
 ]
 
 FILL_COLORS = [
     (225,225,225),
     (220,220,60),
-    (60,250,60)
+    (63, 252, 249)
 ]
 
 class WordGuess:
@@ -51,6 +51,8 @@ class WordGuess:
             draw = ImageDraw.Draw(img)
             for idx, correctness in self.results.items():
                 draw.rectangle([int(size * (0.05 + idx)), int(size * 0.05), int(size * (idx + 0.9)) , int(size * 0.95)], outline='grey', width=3, fill=FILL_COLORS[correctness])
+                if correctness == MISPLACE_LETTER:
+                    draw.rectangle([int(size * (0.15 + idx)), int(size * 0.15), int(size * (idx + 0.8)), int(size * 0.85)], fill=FILL_COLORS[0])
                 draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=FONT_COLORS[correctness])
             img.save(in_memory_file, 'png')
             in_memory_file.seek(0)
