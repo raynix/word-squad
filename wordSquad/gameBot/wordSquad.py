@@ -24,7 +24,7 @@ FONT_COLORS = [
 FILL_COLORS = [
     (225,225,225),
     (220,220,60),
-    (63, 252, 249)
+    (151, 23, 255)
 ]
 
 class WordGuess:
