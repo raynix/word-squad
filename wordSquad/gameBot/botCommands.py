@@ -1,3 +1,4 @@
+from ast import Call
 import os
 import subprocess
 import logging
@@ -117,3 +118,7 @@ def info(update: Update, context: CallbackContext) -> None:
         f'Build-time: {build_time}\n' +
         f"Uptime: {output.stdout.decode('utf-8')}"
     )
+
+def leaderboard(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))

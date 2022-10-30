@@ -4,6 +4,7 @@ from tempfile import SpooledTemporaryFile
 from mongoengine import Document, fields
 
 import re
+import datetime
 
 CORRECT_LETTER = 2
 MISPLACE_LETTER = 1
@@ -66,6 +67,7 @@ class WordSquadGame(Document):
     solved = fields.BooleanField(default=False)
     treasures = fields.ListField(default = [])
     scores = fields.DictField(default = {})
+    created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
 
     def __str__(self):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
@@ -109,3 +111,17 @@ class WordSquadGame(Document):
             return cls.objects.filter(channel_id=channel_id).count()
         else:
             return cls.objects.count()
+
+    @classmethod
+    def total_points(cls, channel_id):
+        records = {}
+        for game in WordSquadGame.objects(channel_id=channel_id, solved=True).all():
+            for k, v in game.scores.items():
+                if k in records.keys():
+                    records[k] += v
+                else:
+                    records[k] = v
+        return (
+           'Leaderboard of this channel:\n' +
+            '\n'.join([f'{k}: {v}' for k, v in sorted(records.items(), key=lambda item: item[1], reverse=True)])
+        )
