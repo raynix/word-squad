@@ -48,7 +48,7 @@ class WordGuess(EmbeddedDocument):
             draw = ImageDraw.Draw(img)
             # main letters
             for idx, correctness in enumerate(self.letter_results):
-                draw.rectangle([int(size * (0.05 + idx)), int(size * 0.05), int(size * (idx + 0.9)) , int(size * 0.95)], outline='grey', width=3, fill=FILL_COLORS[correctness])
+                draw.rectangle([int(size * (0.05 + idx)), int(size * 0.07), int(size * (idx + 0.9)) , int(size * 0.97)], outline='grey', width=3, fill=FILL_COLORS[correctness])
                 if correctness == MISPLACE_LETTER:
                     draw.rectangle([int(size * (0.15 + idx)), int(size * 0.15), int(size * (idx + 0.8)), int(size * 0.85)], fill=FILL_COLORS[0])
                 draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=FONT_COLORS[correctness])
