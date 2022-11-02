@@ -21,9 +21,10 @@ SCORES = {
 }
 
 FONT_COLORS = [
-    (168,168,168),
-    (10,10,10),
-    (10,10,10)
+    (168, 168, 168),
+    (10, 10, 10),
+    (10, 10, 10),
+    (76, 168, 50)
 ]
 
 FILL_COLORS = [
@@ -40,16 +41,21 @@ class WordGuess(EmbeddedDocument):
     def wrong_letters(self):
         return [x for i, x in enumerate(self.guess) if self.letter_results[i] == 0]
 
-    def draw(self, size=100):
+    def draw(self, available_letters, size=100):
         with SpooledTemporaryFile() as in_memory_file:
             img = Image.new('RGB', (size*len(self.guess), 2 * size), color = (240,240,240))
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
             draw = ImageDraw.Draw(img)
+            # main letters
             for idx, correctness in enumerate(self.letter_results):
                 draw.rectangle([int(size * (0.05 + idx)), int(size * 0.05), int(size * (idx + 0.9)) , int(size * 0.95)], outline='grey', width=3, fill=FILL_COLORS[correctness])
                 if correctness == MISPLACE_LETTER:
                     draw.rectangle([int(size * (0.15 + idx)), int(size * 0.15), int(size * (idx + 0.8)), int(size * 0.85)], fill=FILL_COLORS[0])
                 draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=FONT_COLORS[correctness])
+            # available letters
+            font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.25))
+            draw.text((int(size * 0.05), int(size * 1.1)), "".join(available_letters).upper(), font=font, fill=FONT_COLORS[3])
+
             img.save(in_memory_file, 'png')
             in_memory_file.seek(0)
             png_data = in_memory_file.read()

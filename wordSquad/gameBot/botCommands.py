@@ -82,7 +82,7 @@ def guess(update: Update, context: CallbackContext) -> None:
             return
         new_guess = WordGuess(guess=text, by_user=user)
         game_session.add_guess(new_guess)
-        message.reply_photo(new_guess.draw(200), reply_to_message_id=message.message_id)
+        message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, size=200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
             secret_word = Word.objects.filter(word=game_session.secret_word).first()
             message.reply_text(
