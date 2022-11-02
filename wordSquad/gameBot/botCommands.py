@@ -123,3 +123,8 @@ def info(update: Update, context: CallbackContext) -> None:
 def leaderboard(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))
+
+def hint(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    game_session = WordSquadGame.current_game(channel_id)
+    update.message.reply_text(' '.join(game_session.available_letters).upper())

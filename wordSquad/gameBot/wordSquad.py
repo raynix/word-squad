@@ -6,6 +6,7 @@ from mongoengine import Document, EmbeddedDocument, fields
 
 import re
 import datetime
+import string
 
 from gameBot.models import TgUser
 
@@ -36,6 +37,9 @@ class WordGuess(EmbeddedDocument):
     letter_results = fields.ListField(default=[])
     by_user = fields.ReferenceField(TgUser)
 
+    def wrong_letters(self):
+        return [x for i, x in enumerate(self.guess) if self.letter_results[i] == 0]
+
     def draw(self, size=100):
         with SpooledTemporaryFile() as in_memory_file:
             img = Image.new('RGB', (size*len(self.guess), 2 * size), color = (240,240,240))
@@ -60,6 +64,7 @@ class WordSquadGame(Document):
     scores = fields.DictField(default = {})
     created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
     guesses = fields.EmbeddedDocumentListField(WordGuess)
+    available_letters = fields.ListField(default=list(string.ascii_lowercase))
 
     def __str__(self):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
@@ -77,6 +82,7 @@ class WordSquadGame(Document):
                 self.claim_treasure('splash', guess.by_user, idx)
             guess.letter_results.append(result)
         self.guesses.append(guess)
+        self.available_letters = [x for x in self.available_letters if x not in guess.wrong_letters()]
         self.save()
 
     def claim_treasure(self, claim_type, user, treasure_idx):
