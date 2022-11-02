@@ -48,7 +48,7 @@ def game(update: Update, context: CallbackContext) -> None:
         game_session.save()
         update.message.reply_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {picked_word.difficulty()}\n' +
-            'Synonyms: ' + (', '.join(picked_word.synonyms()) or "0 synonym found.")
+            f'Synonyms: {len(picked_word.synonyms())} found.'
         )
         # update.message.reply_text(f'{game_session.secret_word}')
     else:

@@ -24,7 +24,7 @@ FONT_COLORS = [
     (168, 168, 168),
     (10, 10, 10),
     (10, 10, 10),
-    (76, 168, 50)
+    (158, 219, 123)
 ]
 
 FILL_COLORS = [
@@ -54,7 +54,7 @@ class WordGuess(EmbeddedDocument):
                 draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=FONT_COLORS[correctness])
             # available letters
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.25))
-            draw.text((int(size * 0.05), int(size * 1.1)), "".join(available_letters).upper(), font=font, fill=FONT_COLORS[3])
+            draw.text((int(size * 0.01), int(size * 1.1)), f'[ {"".join(available_letters).upper()} ]', font=font, fill=FONT_COLORS[3])
 
             img.save(in_memory_file, 'png')
             in_memory_file.seek(0)
