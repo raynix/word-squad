@@ -1,10 +1,13 @@
+from email.policy import default
 from random import random
 from PIL import Image, ImageDraw, ImageFont
 from tempfile import SpooledTemporaryFile
-from mongoengine import Document, fields
+from mongoengine import Document, EmbeddedDocument, fields
 
 import re
 import datetime
+
+from gameBot.models import TgUser
 
 CORRECT_LETTER = 2
 MISPLACE_LETTER = 1
@@ -28,29 +31,17 @@ FILL_COLORS = [
     (151, 23, 255)
 ]
 
-class WordGuess:
-
-    def __init__(self, game_session, guess, user) -> None:
-        self.guess = guess
-        self.results = {}
-        for idx, letter in enumerate(guess):
-            # letter guessed accurately
-            if letter == game_session.secret_word[idx]:
-                self.results[idx] = CORRECT_LETTER
-                game_session.claim_treasure('accurate', user, idx)
-            # letter guessed but in wrong location
-            elif letter in game_session.secret_word:
-                self.results[idx] = MISPLACE_LETTER
-                game_session.claim_treasure('splash', user, idx)
-            else:
-                self.results[idx] = WRONG_LETTER
+class WordGuess(EmbeddedDocument):
+    guess = fields.StringField()
+    letter_results = fields.ListField(default=[])
+    by_user = fields.ReferenceField(TgUser)
 
     def draw(self, size=100):
         with SpooledTemporaryFile() as in_memory_file:
             img = Image.new('RGB', (size*len(self.guess), 2 * size), color = (240,240,240))
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
             draw = ImageDraw.Draw(img)
-            for idx, correctness in self.results.items():
+            for idx, correctness in enumerate(self.letter_results):
                 draw.rectangle([int(size * (0.05 + idx)), int(size * 0.05), int(size * (idx + 0.9)) , int(size * 0.95)], outline='grey', width=3, fill=FILL_COLORS[correctness])
                 if correctness == MISPLACE_LETTER:
                     draw.rectangle([int(size * (0.15 + idx)), int(size * 0.15), int(size * (idx + 0.8)), int(size * 0.85)], fill=FILL_COLORS[0])
@@ -68,9 +59,25 @@ class WordSquadGame(Document):
     treasures = fields.ListField(default = [])
     scores = fields.DictField(default = {})
     created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
+    guesses = fields.EmbeddedDocumentListField(WordGuess)
 
     def __str__(self):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
+
+    def add_guess(self, guess) -> None:
+        for idx, letter in enumerate(guess.guess):
+            # letter guessed accurately
+            result = WRONG_LETTER
+            if letter == self.secret_word[idx]:
+                result = CORRECT_LETTER
+                self.claim_treasure('accurate', guess.by_user, idx)
+            # letter guessed but in wrong location
+            elif letter in self.secret_word:
+                result = MISPLACE_LETTER
+                self.claim_treasure('splash', guess.by_user, idx)
+            guess.letter_results.append(result)
+        self.guesses.append(guess)
+        self.save()
 
     def claim_treasure(self, claim_type, user, treasure_idx):
         if claim_type == 'accurate' and self.treasures[treasure_idx][claim_type] is None:
@@ -79,7 +86,6 @@ class WordSquadGame(Document):
         elif self.treasures[treasure_idx]['accurate'] is None and self.treasures[treasure_idx][claim_type] is None:
             self.treasures[treasure_idx][claim_type] = user
             self.add_score(user, SCORES[claim_type])
-        self.save()
 
     def add_score(self, user, score):
         if user.name in self.scores.keys():
