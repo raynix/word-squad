@@ -80,9 +80,21 @@ class WordSquadGame(Document):
     created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
     guesses = fields.EmbeddedDocumentListField(WordGuess)
     available_letters = fields.ListField(default=list(string.ascii_lowercase))
+    difficulty = fields.StringField(default='Normal')
+
+    bonus = {
+        'Easy': 5,
+        'Normal': 10,
+        'Hard': 20,
+        'Very Hard': 40,
+        'Ultra Hard': 100
+    }
 
     def __str__(self):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
+
+    def bonus_points(self):
+        return self.bonus[self.difficulty]
 
     def add_guess(self, guess) -> None:
         guess_letters_linked = [ False for i in range(len(self.secret_word))]

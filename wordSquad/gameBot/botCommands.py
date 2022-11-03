@@ -43,12 +43,13 @@ def game(update: Update, context: CallbackContext) -> None:
         picked_word = Word.pick_one(5)
         game_session = WordSquadGame()
         game_session.secret_word = picked_word.word
+        game_session.difficulty = picked_word.difficulty()
         game_session.channel_id = channel_id
         game_session.bury_treasures()
         game_session.save()
         update.message.reply_text(
-            f'New game started: {len(game_session.secret_word)} letters. Difficulty: {picked_word.difficulty()}\n' +
-            f'Synonyms: {len(picked_word.synonyms())} found.'
+            f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
+            f'Prize: {game_session.bonus_points()} points'
         )
         # update.message.reply_text(f'{game_session.secret_word}')
     else:
@@ -90,7 +91,7 @@ def guess(update: Update, context: CallbackContext) -> None:
                 '\n'.join(secret_word.meanings())
             )
             game_session.solved = True
-            game_session.add_score(user, SCORES['game'])
+            game_session.add_score(user, game_session.bonus_points())
             game_session.save()
             message.reply_text(game_session.print_score())
 
