@@ -85,32 +85,27 @@ class WordSquadGame(Document):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
 
     def add_guess(self, guess) -> None:
-        targets = {}
-        for idx, letter in enumerate(self.secret_word):
-            targets[idx] = { 'letter': letter, 'hit': False }
-        sources = {}
-        for idx, letter in enumerate(guess.guess):
-            sources[idx] = { 'letter': letter, 'hit': False }
-
+        guess_letters_linked = [ False for i in range(len(self.secret_word))]
+        secret_letters_linked = [ False for i in range(len(self.secret_word))]
         guess.letter_results = [WRONG_LETTER for i in range(len(self.secret_word))]
         # letter guessed accurately
-        for k, v in sources.items():
-            if v['letter'] == targets[k]['letter']:
-                guess.letter_results[k] = CORRECT_LETTER
-                self.claim_treasure('accurate', guess.by_user, k)
-                v['hit'] = True
-                targets[k]['hit'] = True
+        for idx, letter in enumerate(guess.guess):
+            if letter == self.secret_word[idx]:
+                guess.letter_results[idx] = CORRECT_LETTER
+                self.claim_treasure('accurate', guess.by_user, idx)
+                guess_letters_linked[idx] = True
+                secret_letters_linked[idx] = True
         # letter guessed but in wrong location
-        for i, j in sources.items():
-            if j['hit']:
+        for idx, letter in enumerate(guess.guess):
+            if guess_letters_linked[idx]:
                 continue
-            for k, v in targets.items():
-                if v['hit']:
+            for idx2, letter2 in enumerate(self.secret_word):
+                if secret_letters_linked[idx2]:
                     continue
-                if j['letter'] == v['letter']:
-                    guess.letter_results[i] = MISPLACE_LETTER
-                    self.claim_treasure('splash', guess.by_user, i)
-                    v['hit'] = True
+                if letter == letter2:
+                    guess.letter_results[idx] = MISPLACE_LETTER
+                    self.claim_treasure('splash', guess.by_user, idx2)
+                    secret_letters_linked[idx2] = True
                     break
         self.guesses.append(guess)
         self.available_letters = [x for x in self.available_letters if x in guess.correct_letters() or x not in guess.wrong_letters()]
