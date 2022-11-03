@@ -35,7 +35,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: django-bot
-          image: ghcr.io/raynix/word-squad:dev-3385377221
+          image: ghcr.io/raynix/word-squad:dev-3389921376
           envFrom:
             - secretRef:
                 name: word-squad-env
