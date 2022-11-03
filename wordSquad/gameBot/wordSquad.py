@@ -7,8 +7,14 @@ from mongoengine import Document, EmbeddedDocument, fields
 import re
 import datetime
 import string
+import logging
 
 from gameBot.models import TgUser
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 CORRECT_LETTER = 2
 MISPLACE_LETTER = 1
@@ -40,6 +46,9 @@ class WordGuess(EmbeddedDocument):
 
     def wrong_letters(self):
         return [x for i, x in enumerate(self.guess) if self.letter_results[i] == 0]
+
+    def correct_letters(self):
+        return [x for i, x in enumerate(self.guess) if self.letter_results[i] > 0]
 
     def draw(self, available_letters, size=100):
         with SpooledTemporaryFile() as in_memory_file:
@@ -76,19 +85,35 @@ class WordSquadGame(Document):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
 
     def add_guess(self, guess) -> None:
+        targets = {}
+        for idx, letter in enumerate(self.secret_word):
+            targets[idx] = { 'letter': letter, 'hit': False }
+        sources = {}
         for idx, letter in enumerate(guess.guess):
-            # letter guessed accurately
-            result = WRONG_LETTER
-            if letter == self.secret_word[idx]:
-                result = CORRECT_LETTER
-                self.claim_treasure('accurate', guess.by_user, idx)
-            # letter guessed but in wrong location
-            elif letter in self.secret_word:
-                result = MISPLACE_LETTER
-                self.claim_treasure('splash', guess.by_user, idx)
-            guess.letter_results.append(result)
+            sources[idx] = { 'letter': letter, 'hit': False }
+
+        guess.letter_results = [WRONG_LETTER for i in range(len(self.secret_word))]
+        # letter guessed accurately
+        for k, v in sources.items():
+            if v['letter'] == targets[k]['letter']:
+                guess.letter_results[k] = CORRECT_LETTER
+                self.claim_treasure('accurate', guess.by_user, k)
+                v['hit'] = True
+                targets[k]['hit'] = True
+        # letter guessed but in wrong location
+        for i, j in sources.items():
+            if j['hit']:
+                continue
+            for k, v in targets.items():
+                if v['hit']:
+                    continue
+                if j['letter'] == v['letter']:
+                    guess.letter_results[i] = MISPLACE_LETTER
+                    self.claim_treasure('splash', guess.by_user, i)
+                    v['hit'] = True
+                    break
         self.guesses.append(guess)
-        self.available_letters = [x for x in self.available_letters if x not in guess.wrong_letters()]
+        self.available_letters = [x for x in self.available_letters if x in guess.correct_letters() or x not in guess.wrong_letters()]
         self.save()
 
     def claim_treasure(self, claim_type, user, treasure_idx):
