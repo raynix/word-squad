@@ -23,7 +23,7 @@ class Word(models.Model):
          cursor.execute(f"select count(sw2.word) as count FROM words AS sw LEFT JOIN senses AS s USING (wordid) LEFT JOIN synsets AS y USING (synsetid) LEFT JOIN senses AS s2 ON (y.synsetid = s2.synsetid) LEFT JOIN words AS sw2 ON (sw2.wordid = s2.wordid) WHERE sw.wordid <> sw2.wordid AND sw.word = '{self.word}'")
          synonyms_count = namedtuplefetchall(cursor)[0].count
          if synonyms_count == 0:
-            return 'Ultra Hard!'
+            return 'Ultra Hard'
          elif synonyms_count < 3:
             return 'Very Hard'
          elif synonyms_count < 7:
