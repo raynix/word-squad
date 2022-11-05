@@ -1,4 +1,4 @@
-from django.db import models, connection
+from django.db import models, connection, close_old_connections
 from mongoengine import Document, fields
 
 from collections import namedtuple
@@ -52,6 +52,7 @@ class Word(models.Model):
 
    @classmethod
    def pick_one(cls, length):
+      close_old_connections()
       return cls.objects.raw(f"select * from words where word regexp '^[a-z]{{{length}}}$' order by rand() limit 1")[0]
 
 
