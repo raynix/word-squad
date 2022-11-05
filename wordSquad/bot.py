@@ -14,11 +14,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def start(update: Update, context: CallbackContext) -> None:
+def help(update: Update, context: CallbackContext) -> None:
     """Inform user about what this bot can do"""
     update.message.reply_text(
-        'Please select one of the following options:\n'
-        '/venue show available venues\n'
+        'Use /game to start a new game and type a word to guess.\n' +
+        'In the response:\n' +
+        '- Yellow means correct letter but in wrong place\n' +
+        '- Purple means correct letter in correct place\n' +
+        'Get all purple letters to win.'
     )
 
 def debug(update: Update, context: CallbackContext) -> None:
@@ -32,9 +35,9 @@ def main() -> None:
     # Create the Updater and pass it your bot's token.
     updater = Updater(os.environ["BOT_TOKEN"])
     dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CommandHandler('debug', debug))
-    dispatcher.add_handler(CommandHandler('users', users))
+    dispatcher.add_handler(CommandHandler('help', help))
+    # dispatcher.add_handler(CommandHandler('debug', debug))
+    # dispatcher.add_handler(CommandHandler('users', users))
     # dispatcher.add_handler(CommandHandler('adduser', add_user))
     dispatcher.add_handler(CommandHandler('game', game))
     dispatcher.add_handler(CommandHandler('endgame', endgame))
