@@ -47,7 +47,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('info', info))
     dispatcher.add_handler(CommandHandler('hint', hint))
     dispatcher.add_handler(CommandHandler('leaderboard', leaderboard))
-    dispatcher.add_handler(MessageHandler(Filters.text, guess))
+    dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
     # dispatcher.add_handler(CommandHandler('help', help_handler))
 
     # Start the Bot
