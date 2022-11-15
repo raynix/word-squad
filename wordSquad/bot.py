@@ -48,7 +48,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('hint', hint))
     dispatcher.add_handler(CommandHandler('leaderboard', leaderboard))
     dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
-    # dispatcher.add_handler(CommandHandler('help', help_handler))
+    dispatcher.add_error_handler(error_handler, run_async=True)
 
     # Start the Bot
     updater.start_polling()
