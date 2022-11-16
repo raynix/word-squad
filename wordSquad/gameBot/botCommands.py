@@ -80,6 +80,8 @@ def game_score(update: Update, context: CallbackContext) -> None:
 
 def guess(update: Update, context: CallbackContext) -> None:
     message = update.message
+    if not message:
+        return
     user = TgUser.find_or_create(message.from_user.id, message.from_user.first_name, message.from_user.last_name)
     text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
