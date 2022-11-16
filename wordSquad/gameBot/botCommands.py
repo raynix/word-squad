@@ -10,10 +10,16 @@ from gameBot.wordSquad import *
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
-from random import random
+from random import random, choice
 import re
 
 DEVELOPER_CHAT_ID = 1262447783
+WORD_NOT_FOUND = [
+    "Is this an English word?",
+    "Guess it's a word but sorry it's not in my dictionary.",
+    "Nice try mate but no.",
+    "You might find better luck if you try something else.",
+]
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -82,7 +88,7 @@ def guess(update: Update, context: CallbackContext) -> None:
     logger.debug(game_session)
     if game_session and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         if not Word.is_english(text):
-            message.reply_text("Is this an English word?", reply_to_message_id=message.message_id)
+            message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
             return
         new_guess = WordGuess(guess=text, by_user=user)
         game_session.add_guess(new_guess)
