@@ -46,7 +46,7 @@ spec:
               value: 'true'
           ports:
             - name: webhook
-              containerPort: 8000
+              containerPort: 80
           volumeMounts:
             - name: word-squad-settings
               mountPath: /app/wordSquad/settings-tg.py
