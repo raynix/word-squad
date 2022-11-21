@@ -57,7 +57,7 @@ def main() -> None:
     # Start the Bot
     if PROD == 'true':
     # enable webhook
-        updater.start_webhook(listen="0.0.0.0", port=8000, url_path=TOKEN)
+        updater.start_webhook(listen="0.0.0.0", port=443, url_path=TOKEN)
         updater.bot.setWebhook(f'https://{DOMAIN}/{TOKEN}')
     else:
         # enable polling
