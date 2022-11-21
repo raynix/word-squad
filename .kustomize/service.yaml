@@ -6,7 +6,7 @@ spec:
   ports:
     - name: webhook
       port: 8000
-      targetPort: 80
+      targetPort: 8000
       protocol: TCP
   selector:
     app: word-squad
