@@ -8,3 +8,8 @@ resources:
   - oewn.yaml
   - word-squad-env.yaml
   - word-squad-settings.yaml
+
+configMapGenerator:
+  - name: mysql
+    files:
+      - my.override.cnf
