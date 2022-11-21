@@ -4,6 +4,10 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, PollH
 from telegram import Update
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wordSquad.settings-tg')
+TOKEN = os.environ["BOT_TOKEN"]
+PROD = os.environ.get("PROD", "false")
+DOMAIN = os.environ.get("DOMAIN", "wordsquad.awes.one")
+
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
@@ -33,7 +37,7 @@ def debug(update: Update, context: CallbackContext) -> None:
 def main() -> None:
     """Run bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(os.environ["BOT_TOKEN"])
+    updater = Updater(TOKEN)
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler('help', help))
     # dispatcher.add_handler(CommandHandler('debug', debug))
@@ -51,8 +55,13 @@ def main() -> None:
     dispatcher.add_error_handler(error_handler, run_async=True)
 
     # Start the Bot
-    updater.start_polling()
-
+    if PROD == 'true':
+    # enable webhook
+        updater.start_webhook(listen="0.0.0.0", port=8000, url_path=TOKEN)
+        updater.bot.setWebhook(f'https://{DOMAIN}/{TOKEN}')
+    else:
+        # enable polling
+        updater.start_polling()
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
     updater.idle()

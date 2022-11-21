@@ -5,6 +5,7 @@ namespace: word-squad
 resources:
   - ns.yaml
   - deploy.yaml
+  - service.yaml
   - oewn.yaml
   - word-squad-env.yaml
   - word-squad-settings.yaml
