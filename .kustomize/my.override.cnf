@@ -1,3 +1,0 @@
-[mysqld]
-wait_timeout=604800
-interactive_timeout = 300
