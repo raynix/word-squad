@@ -82,6 +82,10 @@ class WordSquadGame(Document):
     available_letters = fields.ListField(default=list(string.ascii_lowercase))
     difficulty = fields.StringField(default='Normal')
 
+    meta = {
+        'indexes': ['channel_id', 'solved']
+    }
+
     bonus = {
         'Easy': 5,
         'Normal': 10,

@@ -51,7 +51,7 @@ def game(update: Update, context: CallbackContext) -> None:
     if game_session is None:
         picked_word = Word.pick_one(5)
         game_session = WordSquadGame()
-        game_session.secret_word = picked_word.word
+        game_session.secret_word = picked_word.word.lower()
         game_session.difficulty = picked_word.difficulty()
         game_session.channel_id = channel_id
         game_session.bury_treasures()
@@ -96,7 +96,7 @@ def guess(update: Update, context: CallbackContext) -> None:
         game_session.add_guess(new_guess)
         message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, size=200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
-            secret_word = Word.objects.filter(word=game_session.secret_word).first()
+            secret_word = Word.objects.filter(word__iexact=game_session.secret_word).first()
             message.reply_text(
                 f"You got it! Meanings of the word {secret_word}:\n" +
                 '\n'.join(secret_word.meanings())
