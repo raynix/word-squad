@@ -1,13 +1,4 @@
-from django.db import models, connection, close_old_connections
 from mongoengine import Document, fields
-
-from collections import namedtuple
-
-def namedtuplefetchall(cursor):
-    "Return all rows from a cursor as a namedtuple"
-    desc = cursor.description
-    nt_result = namedtuple('Result', [col[0] for col in desc])
-    return [nt_result(*row) for row in cursor.fetchall()]
 
 class Word(Document):
    word = fields.StringField()

@@ -101,9 +101,10 @@ class WordSquadGame(Document):
         return self.bonus[self.difficulty]
 
     def add_guess(self, guess) -> None:
-        guess_letters_linked = [ False for i in range(len(self.secret_word))]
-        secret_letters_linked = [ False for i in range(len(self.secret_word))]
-        guess.letter_results = [WRONG_LETTER for i in range(len(self.secret_word))]
+        length = len(self.secret_word)
+        guess_letters_linked = [ False for i in range(length)]
+        secret_letters_linked = [ False for i in range(length)]
+        guess.letter_results = [WRONG_LETTER for i in range(length)]
         # letter guessed accurately
         for idx, letter in enumerate(guess.guess):
             if letter == self.secret_word[idx]:

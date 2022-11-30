@@ -10,7 +10,7 @@ from gameBot.wordSquad import *
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
-from random import random, choice
+from random import choice
 import re
 
 DEVELOPER_CHAT_ID = 1262447783
@@ -60,7 +60,6 @@ def game(update: Update, context: CallbackContext) -> None:
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
             f'Prize: {game_session.bonus_points()} points'
         )
-        # update.message.reply_text(f'{game_session.secret_word}')
     else:
         update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters.')
 
@@ -69,14 +68,13 @@ def endgame(update: Update, context: CallbackContext) -> None:
     game_session = WordSquadGame.current_game(channel_id)
     if game_session:
         game_session.delete()
-        update.message.reply_text('The current game has been abandoned. Use /game to start a new one.')
+        update.message.reply_text(f'Maybe the word "{game_session.secret_word}" is a bit too random. Please use /game to start a new one.')
 
 def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     if game_session:
         update.message.reply_text(game_session.print_score())
-
 
 def guess(update: Update, context: CallbackContext) -> None:
     message = update.message
