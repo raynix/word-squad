@@ -52,7 +52,8 @@ class WordGuess(EmbeddedDocument):
 
     def draw(self, available_letters, size=100):
         with SpooledTemporaryFile() as in_memory_file:
-            img = Image.new('RGB', (size*len(self.guess), 2 * size), color = (240,240,240))
+            length = len(self.guess)
+            img = Image.new('RGB', (size * length, int(size * length * 0.4)), color = (240,240,240))
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
             draw = ImageDraw.Draw(img)
             # main letters

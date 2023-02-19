@@ -45,11 +45,11 @@ def add_user(update: Update, context: CallbackContext) -> None:
         new_user.save()
         update.message.reply_text(f'New user: {new_user.name} has been created.')
 
-def game(update: Update, context: CallbackContext) -> None:
+def game(update: Update, context: CallbackContext, length=5) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     if game_session is None:
-        picked_word = Word.pick_one(5)
+        picked_word = Word.pick_one(length)
         game_session = WordSquadGame()
         game_session.secret_word = picked_word.word.lower()
         game_session.difficulty = picked_word.difficulty()
@@ -62,6 +62,9 @@ def game(update: Update, context: CallbackContext) -> None:
         )
     else:
         update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters.')
+
+def game6(update: Update, context: CallbackContext) -> None:
+    game(update, context, 6)
 
 def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id

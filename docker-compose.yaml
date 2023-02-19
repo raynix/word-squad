@@ -1,15 +1,6 @@
 version: "3.4"
 
 services:
-  # django:
-  #   container_name: django
-  #   image: python:3.8
-  #   working_dir: /app
-  #   command: ['pip3', 'install', '-r', 'requirements.txt']
-  #   volumes:
-  #     - ./myDjangoProject/:/app/
-
-
   mongodb:
     container_name: mongodb
     image: mongo:6.0.2
@@ -21,16 +12,5 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: pass
 
-  oewn:
-    container_name: oewn
-    image: raynix/oewn-mysql:latest
-    ports:
-      - 3306:3306
-    volumes:
-      - oewn-volume:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: pass
-
 volumes:
   mongo-volume: {}
-  oewn-volume: {}

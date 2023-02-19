@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def help(update: Update, context: CallbackContext) -> None:
     """Inform user about what this bot can do"""
     update.message.reply_text(
-        'Use /game to start a new game and type a word to guess.\n' +
+        'Use /game or /game6 to start a new game and type a word to guess.\n' +
         'In the response:\n' +
         '- Yellow means correct letter but in wrong place\n' +
         '- Purple means correct letter in correct place\n' +
@@ -44,6 +44,7 @@ def main() -> None:
     # dispatcher.add_handler(CommandHandler('users', users))
     # dispatcher.add_handler(CommandHandler('adduser', add_user))
     dispatcher.add_handler(CommandHandler('game', game))
+    dispatcher.add_handler(CommandHandler('game6', game6))
     dispatcher.add_handler(CommandHandler('endgame', endgame))
     dispatcher.add_handler(CommandHandler('giveup', endgame))
     dispatcher.add_handler(CommandHandler('gamescore', game_score))
