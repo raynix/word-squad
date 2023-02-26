@@ -88,18 +88,18 @@ class WordSquadGame(Document):
     }
 
     bonus = {
-        'Easy': 5,
-        'Normal': 10,
-        'Hard': 20,
-        'Very Hard': 40,
-        'Ultra Hard': 100
+        'Easy': 1,
+        'Normal': 2,
+        'Hard': 4,
+        'Very Hard': 10,
+        'Ultra Hard': 20
     }
 
     def __str__(self):
         return f'{self.channel_id}:{self.secret_word}:{self.solved}'
 
     def bonus_points(self):
-        return self.bonus[self.difficulty]
+        return self.bonus[self.difficulty] * len(self.secret_word)
 
     def add_guess(self, guess) -> None:
         length = len(self.secret_word)
