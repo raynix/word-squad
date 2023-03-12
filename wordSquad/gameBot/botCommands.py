@@ -119,7 +119,7 @@ def stats(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         f'Total games recorded: {WordSquadGame.total_games()}\n' +
         f'Total games in this channel: {WordSquadGame.total_games(channel_id)}\n\n' +
-        WordSquadGame.histogram(days=100)
+        WordSquadGame.histogram()
     )
 
 def info(update: Update, context: CallbackContext) -> None:
