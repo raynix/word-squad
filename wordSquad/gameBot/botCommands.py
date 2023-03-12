@@ -139,6 +139,10 @@ def leaderboard(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))
 
+def leaderboard_year(update: Update, context: CallbackContext) -> None:
+    channel_id = update.effective_chat.id
+    update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id, days=365))
+
 def hint(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)

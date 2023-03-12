@@ -39,8 +39,6 @@ FILL_COLORS = [
     (151, 23, 255)
 ]
 
-LEADERBOARD_DAYS = 30
-
 class WordGuess(EmbeddedDocument):
     guess = fields.StringField()
     letter_results = fields.ListField(default=[])
@@ -171,8 +169,8 @@ class WordSquadGame(Document):
             return cls.objects.count()
 
     @classmethod
-    def total_points(cls, channel_id):
-        from_date = datetime.datetime.today() - datetime.timedelta(days=LEADERBOARD_DAYS)
+    def total_points(cls, channel_id, days=30):
+        from_date = datetime.datetime.today() - datetime.timedelta(days)
         records = {}
         for game in WordSquadGame.objects(channel_id=channel_id, solved=True, created_at__gte=from_date).all():
             for k, v in game.scores.items():
@@ -181,7 +179,7 @@ class WordSquadGame(Document):
                 else:
                     records[k] = v
         return (
-           f'Leaderboard({LEADERBOARD_DAYS} days) of this channel:\n' +
+           f'Leaderboard({days} days) of this channel:\n' +
             '\n'.join([f'{k}: {v}' for k, v in sorted(records.items(), key=lambda item: item[1], reverse=True)])
         )
 
