@@ -3,15 +3,19 @@ import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, PollHandler, PollAnswerHandler, RegexHandler, CallbackContext
 from telegram import Update
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wordSquad.settings-tg')
+from gameBot.botCommands import *
+import mongoengine
+
+mongoengine.connect(
+    db=os.environ['MONGODB_DB'],
+    host=os.environ['MONGODB_HOST'],
+    username=os.environ['MONGODB_USERNAME'],
+    password=os.environ['MONGODB_PASSWORD']
+)
+
 TOKEN = os.environ["BOT_TOKEN"]
 PROD = os.environ.get("PROD", "false")
 DOMAIN = os.environ.get("DOMAIN", "wordsquad.awes.one")
-
-from django.core.wsgi import get_wsgi_application
-application = get_wsgi_application()
-
-from gameBot.botCommands import *
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -23,9 +27,11 @@ def help(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         'Use /game or /game6 to start a new game and type a word to guess.\n' +
         'In the response:\n' +
+        '- Gray means wrong letter\n' +
         '- Yellow means correct letter but in wrong place\n' +
         '- Purple means correct letter in correct place\n' +
-        'Get all purple letters to win.'
+        '- Green letters at bottom are the potential ones for this game\n' +
+        'Get all letters purple to win.'
     )
 
 def debug(update: Update, context: CallbackContext) -> None:
@@ -53,6 +59,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('info', info))
     dispatcher.add_handler(CommandHandler('hint', hint))
     dispatcher.add_handler(CommandHandler('leaderboard', leaderboard))
+    dispatcher.add_handler(CommandHandler('leaderboardyear', leaderboard_year))
     dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
     dispatcher.add_error_handler(error_handler, run_async=True)
 
