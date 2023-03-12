@@ -184,3 +184,25 @@ class WordSquadGame(Document):
            f'Leaderboard({LEADERBOARD_DAYS} days) of this channel:\n' +
             '\n'.join([f'{k}: {v}' for k, v in sorted(records.items(), key=lambda item: item[1], reverse=True)])
         )
+
+    @classmethod
+    def histogram(cls, days=7):
+        from_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        pipeline = [
+            {
+                "$match": { "created_at": { "$gte": from_date}}
+            },
+            {
+                "$group": {
+                    "_id": { "$dateToString": { "format": "%Y-%m-%d", "date": "$created_at" }},
+                    "count": { "$sum": 1 }
+                }
+            },
+            {
+                "$sort": { "_id": 1 }
+            }
+        ]
+        return (
+            f"Number of games in the past {days} days:\n" +
+            "\n".join([ f"{row['_id']}: {row['count']}" for row in cls.objects.aggregate(pipeline)])
+        )
