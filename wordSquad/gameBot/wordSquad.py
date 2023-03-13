@@ -204,3 +204,34 @@ class WordSquadGame(Document):
             f"Number of games in the past {days} days:\n" +
             "\n".join([ f"{row['_id']}: {row['count']}" for row in cls.objects.aggregate(pipeline)])
         )
+
+    @classmethod
+    def channel_leaderboard(cls, channel_id, days=365):
+        from_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        pipeline = [
+            {
+                "$match": { "created_at": { "$gte": from_date}}
+            },
+            {
+                "$group": {
+                    "_id": "$channel_id",
+                    "count": { "$sum": 1 }
+                }
+            },
+            {
+                "$sort": { "count": -1 }
+            }
+        ]
+        total_channels = 0
+        total_games = 0
+        for idx, row in enumerate( cls.objects.aggregate(pipeline) ):
+            if row['_id'] == channel_id:
+                channel_rank = idx + 1
+                channel_count = row['count']
+            total_channels = idx
+            total_games += row['count']
+        return (
+            f"Total games recorded in the past {days} days: {total_games}\n"
+            f"Rank of this channel:\n" +
+            f"With {channel_count} games played this channel is No.{channel_rank} in total {total_channels + 1} channels.\n"
+        )
