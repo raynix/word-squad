@@ -117,7 +117,7 @@ def synonyms(update: Update, context: CallbackContext) -> None:
 def stats(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     update.message.reply_text(
-        WordSquadGame.channel_leaderboard(channel_id) + '\n' +
+        WordSquadGame.channel_rank(channel_id) + '\n' +
         WordSquadGame.histogram()
     )
 

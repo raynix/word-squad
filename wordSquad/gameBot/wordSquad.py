@@ -1,15 +1,13 @@
-from email.policy import default
-from random import random
 from PIL import Image, ImageDraw, ImageFont
 from tempfile import SpooledTemporaryFile
 from mongoengine import Document, EmbeddedDocument, fields
 
-import re
 import datetime
 import string
 import logging
 
 from gameBot.models import TgUser
+from gameBot.redisHelper import redis_cached
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -206,7 +204,8 @@ class WordSquadGame(Document):
         )
 
     @classmethod
-    def channel_leaderboard(cls, channel_id, days=365):
+    @redis_cached
+    def channel_rank(cls, channel_id, days=365):
         from_date = datetime.datetime.today() - datetime.timedelta(days=days)
         pipeline = [
             {
