@@ -47,10 +47,6 @@ spec:
           ports:
             - name: webhook
               containerPort: 8000
-          volumeMounts:
-            - name: word-squad-settings
-              mountPath: /app/wordSquad/settings-tg.py
-              subPath: settings-tg.py
           resources:
             requests:
               memory: 400Mi
@@ -61,7 +57,3 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 8000
-      volumes:
-        - name: word-squad-settings
-          secret:
-            secretName: word-squad-settings
