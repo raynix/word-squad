@@ -167,6 +167,7 @@ class WordSquadGame(Document):
             return cls.objects.count()
 
     @classmethod
+    @redis_cached
     def total_points(cls, channel_id, days=30):
         from_date = datetime.datetime.today() - datetime.timedelta(days)
         records = {}
@@ -182,6 +183,7 @@ class WordSquadGame(Document):
         )
 
     @classmethod
+    @redis_cached
     def histogram(cls, days=7):
         from_date = datetime.datetime.today() - datetime.timedelta(days=days)
         pipeline = [
