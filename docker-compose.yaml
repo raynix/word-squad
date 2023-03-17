@@ -11,6 +11,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: pass
+  redis:
+    container_name: redis
+    image: redis:7.0-alpine
+    ports:
+      - 6379:6379
 
 volumes:
   mongo-volume: {}

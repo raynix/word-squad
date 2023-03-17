@@ -8,7 +8,6 @@ COPY ./wordSquad/ ./
 RUN chown -R nobody /app && \
     date > /app/build-time
 USER nobody
-ENV DJANGO_SETTINGS_MODULE=change_me
 ENV BOT_TOKEN=change_me
 
 ENTRYPOINT ["/usr/local/bin/python", "./bot.py"]

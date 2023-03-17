@@ -44,6 +44,8 @@ spec:
               value: wordSquad.settings-tg
             - name: PROD
               value: 'true'
+            - name: REDIS_HOST
+              value: 'redis'
           ports:
             - name: webhook
               containerPort: 8000
