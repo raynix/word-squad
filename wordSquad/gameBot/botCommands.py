@@ -1,7 +1,8 @@
-from ast import Call
 import logging
 import traceback, html, json
 import psutil
+import os
+import datetime, time
 
 from gameBot.models import *
 from gameBot.wordSquad import *
@@ -126,8 +127,11 @@ def info(update: Update, context: CallbackContext) -> None:
             build_time = f.read()
     except:
         build_time = 'Timestamp not found.'
+    start_ts = psutil.Process(os.getpid()).create_time()
+    current_ts = time.time()
     update.message.reply_text(
         f'Build-time: {build_time}\n' +
+        f"Uptime since deploy: {datetime.timedelta(seconds=int(current_ts-start_ts))}\n" +
         f"CPU: {psutil.cpu_percent()}%\n" +
         f"Memory: {psutil.virtual_memory().percent}%\n\n" +
         "This game bot will always be free to play. If you'd like to donate a few bucks to keep me encouraged, please go to https://patreon.com/raynix"
