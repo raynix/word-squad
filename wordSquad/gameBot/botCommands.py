@@ -1,8 +1,7 @@
 from ast import Call
-import os
-import subprocess
 import logging
 import traceback, html, json
+import psutil
 
 from gameBot.models import *
 from gameBot.wordSquad import *
@@ -127,10 +126,10 @@ def info(update: Update, context: CallbackContext) -> None:
             build_time = f.read()
     except:
         build_time = 'Timestamp not found.'
-    output = subprocess.run(['uptime'], stdout=subprocess.PIPE)
     update.message.reply_text(
         f'Build-time: {build_time}\n' +
-        f"Uptime: {output.stdout.decode('utf-8')}\n\n" +
+        f"CPU: {psutil.cpu_percent()}%\n" +
+        f"Memory: {psutil.virtual_memory().percent}%\n\n" +
         "This game bot will always be free to play. If you'd like to donate a few bucks to keep me encouraged, please go to https://patreon.com/raynix"
     )
 

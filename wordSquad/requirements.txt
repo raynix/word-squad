@@ -4,3 +4,4 @@ nltk==3.7
 mongoengine~=0.24
 pillow~=9.2
 redis~=4.5
+psutil
