@@ -37,6 +37,12 @@ FILL_COLORS = [
     (151, 23, 255)
 ]
 
+
+def top_players(scores_dict, n=20):
+    # scores_dict = { 'player1': 100, 'player2': 200, ... }
+    sorted_list = sorted(scores_dict.items(), key=lambda item: item[1], reverse=True)[:n]
+    return '\n'.join([f'{idx+1} - {item[0]}: {item[1]}' for idx, item in enumerate(sorted_list)])
+
 class WordGuess(EmbeddedDocument):
     guess = fields.StringField()
     letter_results = fields.ListField(default=[])
@@ -68,7 +74,6 @@ class WordGuess(EmbeddedDocument):
             in_memory_file.seek(0)
             png_data = in_memory_file.read()
             return png_data
-
 
 class WordSquadGame(Document):
     channel_id = fields.IntField()
@@ -152,7 +157,7 @@ class WordSquadGame(Document):
     def print_score(self):
         return (
             'Game scores: \n' +
-            '\n'.join([f'{k}: {v}' for k, v in sorted(self.scores.items(), key=lambda item: item[1], reverse=True)])
+            top_players(self.scores)
         )
 
     @classmethod
@@ -178,8 +183,8 @@ class WordSquadGame(Document):
                 else:
                     records[k] = v
         return (
-           f'Leaderboard({days} days) of this channel:\n' +
-            '\n'.join([f'{k}: {v}' for k, v in sorted(records.items(), key=lambda item: item[1], reverse=True)])
+            f'Leaderboard({days} days) of this channel:\n' +
+            top_players(records)
         )
 
     @classmethod
