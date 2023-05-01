@@ -150,6 +150,18 @@ def hint(update: Update, context: CallbackContext) -> None:
     game_session = WordSquadGame.current_game(channel_id)
     update.message.reply_text(' '.join(game_session.available_letters).upper())
 
+def message_developer(update: Update, context: CallbackContext) -> None:
+    """Leave a message to the developer."""
+    message = update.message or update.edited_message
+    text = (
+        f"A message was left for the developer:\n"
+        f"<pre>{html.escape(json.dumps(message.to_dict(), indent=2, ensure_ascii=False))}</pre>"
+    )
+
+    # And send it to the developer.
+    context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
+    update.message.reply_text("Message sent.")
+
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
     # Log the error before we do anything else, so we can see it even if something breaks.
