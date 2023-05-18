@@ -46,14 +46,17 @@ def add_user(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(f'New user: {new_user.name} has been created.')
 
 def game(update: Update, context: CallbackContext, length=5) -> None:
-    channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = WordSquadGame.current_game(channel.tg_id)
     if game_session is None:
-        picked_word = Word.pick_one(length)
+        if channel.games_counter == 0:
+            channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
+            channel.save()
+        picked_word = Word.pick_trial() if channel.in_trial_mode()  else Word.pick_one(length)
         game_session = WordSquadGame()
         game_session.secret_word = picked_word.word.lower()
         game_session.difficulty = picked_word.difficulty()
-        game_session.channel_id = channel_id
+        game_session.channel_id = channel.tg_id
         game_session.bury_treasures()
         game_session.save()
         update.message.reply_text(
@@ -86,8 +89,8 @@ def guess(update: Update, context: CallbackContext) -> None:
     user = TgUser.find_or_create(message.from_user.id, message.from_user.first_name, message.from_user.last_name)
     text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
-    channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = WordSquadGame.current_game(channel.tg_id)
     logger.debug(game_session)
     if game_session and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
         if not Word.is_english(text):
@@ -105,6 +108,8 @@ def guess(update: Update, context: CallbackContext) -> None:
             game_session.solved = True
             game_session.add_score(user, game_session.bonus_points())
             game_session.save()
+            channel.games_counter += 1
+            channel.save()
             message.reply_text(game_session.print_score())
 
 def synonyms(update: Update, context: CallbackContext) -> None:

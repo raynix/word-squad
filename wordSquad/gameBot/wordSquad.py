@@ -37,7 +37,6 @@ FILL_COLORS = [
     (151, 23, 255)
 ]
 
-
 def top_players(scores_dict, n=20):
     # scores_dict = { 'player1': 100, 'player2': 200, ... }
     sorted_list = sorted(scores_dict.items(), key=lambda item: item[1], reverse=True)[:n]
@@ -230,12 +229,16 @@ class WordSquadGame(Document):
         ]
         total_channels = 0
         total_games = 0
+        channel_rank = 0
         for idx, row in enumerate( cls.objects.aggregate(pipeline) ):
             if row['_id'] == channel_id:
                 channel_rank = idx + 1
                 channel_count = row['count']
             total_channels = idx
             total_games += row['count']
+        if channel_rank == 0:
+            channel_rank = total_channels
+            channel_count = 0
         return (
             f"Total games recorded in the past {days} days: {total_games}\n"
             f"Rank of this channel:\n" +

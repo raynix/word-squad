@@ -1,4 +1,5 @@
 from mongoengine import Document, fields
+import random
 
 class Word(Document):
    word = fields.StringField()
@@ -6,6 +7,14 @@ class Word(Document):
    meta = {
       'indexes': ['word']
    }
+
+   trials = [
+      "Apple", "Basic", "Cloud", "Dolly", "Error",
+      "Flour", "Great", "Hello", "Ideal", "Jewel",
+      "Karma", "Label", "Mouse", "Naive", "Ocean",
+      "Paper", "Quest", "Round", "Sleep", "Table",
+      "Ultra", "Value", "World", "Yeast", "Zebra"
+   ]
 
    def __str__(self):
       return self.word
@@ -32,6 +41,10 @@ class Word(Document):
    @classmethod
    def is_english(cls, input):
       return cls.objects(word__iexact=input).count()
+
+   @classmethod
+   def pick_trial(cls):
+      return cls.objects.get(word=random.choice(cls.trials))
 
    @classmethod
    def pick_one(cls, length):
@@ -68,3 +81,24 @@ class TgUser(Document):
          )
          user.save()
       return user
+
+class TgChannel(Document):
+   tg_id = fields.IntField(primary=True)
+   games_counter = fields.IntField(default=0)
+
+   meta = {
+      'indexes': ['tg_id']
+   }
+
+   @classmethod
+   def find_or_create(cls, tg_channel_id):
+      channel = cls.objects(tg_id=tg_channel_id).first()
+      if channel is None:
+         channel = TgChannel(
+            tg_id = tg_channel_id
+         )
+         channel.save()
+      return channel
+
+   def in_trial_mode(self):
+      return self.games_counter < 10
