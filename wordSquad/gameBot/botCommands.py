@@ -52,7 +52,11 @@ def game(update: Update, context: CallbackContext, length=5) -> None:
         if channel.games_counter == 0:
             channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
             channel.save()
-        picked_word = Word.pick_trial() if channel.in_trial_mode()  else Word.pick_one(length)
+        if channel.in_trial_mode():
+            picked_word = Word.pick_trial()
+            update.message.reply_text(f"In trial mode, play {10 - channel.games_counter} more games to unlock all words.")
+        else:
+            picked_word = Word.pick_one(length)
         game_session = WordSquadGame()
         game_session.secret_word = picked_word.word.lower()
         game_session.difficulty = picked_word.difficulty()
