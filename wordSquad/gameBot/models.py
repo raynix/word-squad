@@ -1,5 +1,11 @@
 from mongoengine import Document, fields
 import random
+import re
+
+def sanitize(string):
+   if string is None:
+      return ''
+   return re.sub('[\.]', '_', string)
 
 class Word(Document):
    word = fields.StringField()
@@ -77,7 +83,7 @@ class TgUser(Document):
       if user is None:
          user = TgUser(
             tg_user_id = tg_user_id,
-            name=f'{first_name or ""} {last_name or ""}',
+            name=f'{sanitize(first_name)} {sanitize(last_name)}',
          )
          user.save()
       return user
