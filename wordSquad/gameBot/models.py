@@ -41,8 +41,11 @@ class Word(Document):
    def synonyms(self):
       return ['Not implemented']
 
-   def meanings(self):
+   def full_meanings(self):
       return [f"- {d['meaning']}" for d in self.definition ]
+
+   def meanings(self):
+      return [f"- {d['meaning']}" for d in self.definition[:3] ]
 
    @classmethod
    def is_english(cls, input):

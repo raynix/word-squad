@@ -104,10 +104,11 @@ def guess(update: Update, context: CallbackContext) -> None:
         game_session.add_guess(new_guess)
         message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, size=200), reply_to_message_id=message.message_id)
         if text == game_session.secret_word:
-            secret_word = Word.objects.filter(word__iexact=game_session.secret_word).first()
             message.reply_text(
-                f"You got it! Meanings of the word {secret_word}:\n" +
-                '\n'.join(secret_word.meanings())
+                f"You got it! It is '{text}'!"
+            )
+            message.reply_text(
+                f"For the meanings of '{text}' please see https://dictionary.cambridge.org/dictionary/english/{text}"
             )
             game_session.solved = True
             game_session.add_score(user, game_session.bonus_points())
