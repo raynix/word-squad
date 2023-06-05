@@ -163,14 +163,17 @@ def hint(update: Update, context: CallbackContext) -> None:
 def message_developer(update: Update, context: CallbackContext) -> None:
     """Leave a message to the developer."""
     message = update.message or update.edited_message
-    text = (
-        f"A message was left for the developer:\n"
-        f"<pre>{html.escape(json.dumps(message.to_dict(), indent=2, ensure_ascii=False))}</pre>"
-    )
+    if message.reply_to_message and message.reply_to_message.text:
+        text = (
+            f"A message was left for the developer:\n"
+            f"<pre>{html.escape(message.reply_to_message.text)}</pre>"
+        )
 
-    # And send it to the developer.
-    context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
-    update.message.reply_text("Message sent.")
+        # And send it to the developer.
+        context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
+        update.message.reply_text("Message sent.")
+    else:
+        update.message.reply_text("Please reply a message, then using this command, so the replied message will be delivered.")
 
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
