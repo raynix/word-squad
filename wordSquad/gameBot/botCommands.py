@@ -15,7 +15,6 @@ import re
 
 DEVELOPER_CHAT_ID = 1262447783
 WORD_NOT_FOUND = [
-    "Is this an English word?",
     "Guess it's a word but sorry it's not in my dictionary.",
     "Nice try mate but no.",
     "You might find better luck if you try something else.",
@@ -108,7 +107,7 @@ def guess(update: Update, context: CallbackContext) -> None:
                 f"You got it! It is '{text}'!"
             )
             message.reply_text(
-                f"For the meanings of '{text}' please see https://dictionary.cambridge.org/dictionary/english/{text}"
+                f"For the meanings of '{text}' please see https://www.collinsdictionary.com/us/dictionary/english/{text}"
             )
             game_session.solved = True
             game_session.add_score(user, game_session.bonus_points())
