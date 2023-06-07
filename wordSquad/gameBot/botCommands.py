@@ -11,13 +11,10 @@ from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
 from random import choice
-import re
 
 DEVELOPER_CHAT_ID = 1262447783
 WORD_NOT_FOUND = [
-    "Guess it's a word but sorry it's not in my dictionary.",
-    "Nice try mate but no.",
-    "You might find better luck if you try something else.",
+    "Guess it's a word but it's not in my dictionary. You can reply the word and use /suggest to add it, if you wish",
 ]
 
 logging.basicConfig(
@@ -95,7 +92,7 @@ def guess(update: Update, context: CallbackContext) -> None:
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = WordSquadGame.current_game(channel.tg_id)
     logger.debug(game_session)
-    if game_session and re.match(f'^[a-z]{{{len(game_session.secret_word)}}}$', text):
+    if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
         if not Word.is_english(text):
             message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
             return
@@ -115,6 +112,20 @@ def guess(update: Update, context: CallbackContext) -> None:
             channel.games_counter += 1
             channel.save()
             message.reply_text(game_session.print_score())
+
+def suggest(update: Update, context: CallbackContext) -> None:
+    message = update.message or update.edited_message
+    if message.reply_to_message and message.reply_to_message.text:
+        suggested = message.reply_to_message.text
+        if suggested.isalpha():
+            if Word.is_english(suggested):
+                update.message.reply_text(f"The word '{suggested}' is already in my dictionary.")
+            elif Word.ingest(suggested):
+                update.message.reply_text(f"The word '{suggested}' has been added.")
+            else:
+                update.message.reply_text(f"Failed to add '{suggested}'. Not found at api.dictionaryapi.dev.")
+    else:
+        update.message.reply_text("Please select the suggested word, reply, then use this command.")
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
@@ -170,9 +181,9 @@ def message_developer(update: Update, context: CallbackContext) -> None:
 
         # And send it to the developer.
         context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
-        update.message.reply_text("Message sent.")
+        update.message.reply_text("Message left.")
     else:
-        update.message.reply_text("Please reply a message, then using this command, so the replied message will be delivered.")
+        update.message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
 
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""

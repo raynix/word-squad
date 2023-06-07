@@ -1,11 +1,11 @@
 from mongoengine import Document, fields
 import random
-import re
+import requests
 
 def sanitize(string):
    if string is None:
       return ''
-   return re.sub('[\.]', '_', string)
+   return string.replace(".", "_")
 
 class Word(Document):
    word = fields.StringField()
@@ -71,6 +71,22 @@ class Word(Document):
          picked = cls.objects.get(id=row["_id"])
          break
       return picked
+
+   @classmethod
+   def ingest(cls, word) -> bool:
+      resp = requests.get(f"https://api.dictionaryapi.dev/api/v2/entries/en/{word.lower()}")
+      if not resp.ok:
+         return False
+      json = resp.json()
+      definitions = [
+         { 'pos': meaning['partOfSpeech'], 'meaning': definition['definition'] } for meaning in json[0]['meanings'] for definition in meaning['definitions']
+      ]
+      new_word = Word(
+         word = word,
+         definition = definitions
+      )
+      new_word.save()
+      return True
 
 class TgUser(Document):
    tg_user_id = fields.IntField(primary=True)
