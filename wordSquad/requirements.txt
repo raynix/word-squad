@@ -5,3 +5,4 @@ mongoengine~=0.24
 pillow~=9.2
 redis~=4.5
 psutil
+requests~=2.30
