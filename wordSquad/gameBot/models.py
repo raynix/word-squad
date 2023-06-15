@@ -1,11 +1,12 @@
 from mongoengine import Document, fields
 import random
 import requests
+import re
 
 def sanitize(string):
    if string is None:
       return ''
-   return string.replace(".", "_")
+   return re.sub('[\.\$]', '_', string)
 
 class Word(Document):
    word = fields.StringField()
