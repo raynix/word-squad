@@ -6,7 +6,7 @@ import datetime
 import string
 import logging
 
-from gameBot.models import TgUser
+from gameBot.models import TgUser, Word
 from gameBot.redisHelper import redis_cached
 
 logging.basicConfig(
@@ -162,6 +162,20 @@ class WordSquadGame(Document):
     @classmethod
     def current_game(cls, channel_id):
         return cls.objects(channel_id = channel_id, solved = False).first()
+
+    @classmethod
+    def start(cls, channel_id, length):
+        if length == 0:
+            picked_word = Word.pick_trial()
+        else:
+            picked_word = Word.pick_one(length)
+        game_session = WordSquadGame()
+        game_session.secret_word = picked_word.word.lower()
+        game_session.difficulty = picked_word.difficulty()
+        game_session.channel_id = channel_id
+        game_session.bury_treasures()
+        game_session.save()
+        return game_session
 
     @classmethod
     def total_games(cls, channel_id=None):

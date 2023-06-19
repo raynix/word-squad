@@ -7,7 +7,7 @@ import datetime, time
 from gameBot.models import *
 from gameBot.wordSquad import *
 
-from telegram import Update, ParseMode
+from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 
 from random import choice
@@ -41,7 +41,12 @@ def add_user(update: Update, context: CallbackContext) -> None:
         new_user.save()
         update.message.reply_text(f'New user: {new_user.name} has been created.')
 
-def game(update: Update, context: CallbackContext, length=5) -> None:
+def game(update: Update, context: CallbackContext) -> None:
+    choices = [
+        [InlineKeyboardButton("Classic: 5 letters", callback_data="game:5")],
+        [InlineKeyboardButton("Advanced: 6 letters", callback_data="game:6")],
+        [InlineKeyboardButton("Hardcore: 7 letters", callback_data="game:7")]
+    ]
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = WordSquadGame.current_game(channel.tg_id)
     if game_session is None:
@@ -49,25 +54,31 @@ def game(update: Update, context: CallbackContext, length=5) -> None:
             channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
             channel.save()
         if channel.in_trial_mode():
-            picked_word = Word.pick_trial()
-            update.message.reply_text(f"In trial mode, play {10 - channel.games_counter} more games to unlock all words.")
+            WordSquadGame.start(channel.tg_id, 0)
+            update.message.reply_text(f"Started in trial mode, play {10 - channel.games_counter} more games to unlock all words.")
         else:
-            picked_word = Word.pick_one(length)
-        game_session = WordSquadGame()
-        game_session.secret_word = picked_word.word.lower()
-        game_session.difficulty = picked_word.difficulty()
-        game_session.channel_id = channel.tg_id
-        game_session.bury_treasures()
-        game_session.save()
-        update.message.reply_text(
+            update.message.reply_text(
+                "Please select game mode:",
+                reply_markup=InlineKeyboardMarkup(choices)
+            )
+    else:
+        update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters. You can use /giveup to quit it.')
+
+def game_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data.split(':')
+    if len(data) != 2:
+        return
+    length = data[1]
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = WordSquadGame.current_game(channel.tg_id)
+    if game_session is None:
+        game_session = WordSquadGame.start(channel.tg_id, length)
+        query.edit_message_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
             f'Prize: {game_session.bonus_points()} points'
         )
-    else:
-        update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters.')
-
-def game6(update: Update, context: CallbackContext) -> None:
-    game(update, context, 6)
+        query.answer("Game started, have fun!", show_alert=True)
 
 def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id

@@ -1,7 +1,7 @@
 import os
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, PollHandler, PollAnswerHandler, RegexHandler, CallbackContext
-from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
 from gameBot.botCommands import *
 import mongoengine
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 def help(update: Update, context: CallbackContext) -> None:
     """Inform user about what this bot can do"""
     update.message.reply_text(
-        'Use /game or /game6 to start a new game and type a word to guess.\n' +
+        'Use /game to start a new game and type a word to guess.\n' +
         'In the response:\n' +
         '- Gray means wrong letter\n' +
         '- Yellow means correct letter but in wrong place\n' +
@@ -39,6 +39,8 @@ def debug(update: Update, context: CallbackContext) -> None:
     logger.info(update)
     logger.info(context)
 
+# def test(update: Update, context: CallbackContext) -> None:
+#     pass
 
 def main() -> None:
     """Run bot."""
@@ -47,10 +49,9 @@ def main() -> None:
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler('help', help))
     # dispatcher.add_handler(CommandHandler('debug', debug))
-    # dispatcher.add_handler(CommandHandler('users', users))
-    # dispatcher.add_handler(CommandHandler('adduser', add_user))
+    # dispatcher.add_handler(CommandHandler('test', test))
     dispatcher.add_handler(CommandHandler('game', game))
-    dispatcher.add_handler(CommandHandler('game6', game6))
+    dispatcher.add_handler(CallbackQueryHandler(game_callback, pattern='^game:[0-9]$'))
     dispatcher.add_handler(CommandHandler('endgame', endgame))
     dispatcher.add_handler(CommandHandler('giveup', endgame))
     dispatcher.add_handler(CommandHandler('gamescore', game_score))
