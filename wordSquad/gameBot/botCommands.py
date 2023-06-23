@@ -123,6 +123,29 @@ def guess(update: Update, context: CallbackContext) -> None:
             channel.games_counter += 1
             channel.save()
             message.reply_text(game_session.print_score())
+            choices = [[
+                InlineKeyboardButton("👍", callback_data=f"rating:{text}:+"),
+                InlineKeyboardButton("👎", callback_data=f"rating:{text}:-")
+            ]]
+            message.reply_text(
+                "Do you like this word?",
+                reply_markup=InlineKeyboardMarkup(choices)
+            )
+
+def guess_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data.split(':')
+    if len(data) != 3:
+        return
+    word = data[1]
+    rating = data[2]
+    dictWord = Word.find(word)
+    if dictWord:
+        if rating == '+':
+            dictWord.upvote()
+        else:
+            dictWord.downvote()
+    query.edit_message_text("Thanks for your feedback!")
 
 def suggest(update: Update, context: CallbackContext) -> None:
     message = update.message or update.edited_message

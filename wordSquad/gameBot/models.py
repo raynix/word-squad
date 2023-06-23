@@ -11,6 +11,8 @@ def sanitize(string):
 class Word(Document):
    word = fields.StringField()
    definition = fields.ListField(default=[])
+   upvotes = fields.IntField(default = 0)
+   downvotes = fields.IntField(default = 0)
    meta = {
       'indexes': ['word']
    }
@@ -47,6 +49,22 @@ class Word(Document):
 
    def meanings(self):
       return [f"- {d['meaning']}" for d in self.definition[:3] ]
+
+   def upvote(self):
+      self.upvotes += 1
+      self.save()
+
+   def downvote(self):
+      self.downvotes += 1
+      self.save()
+
+   @classmethod
+   def find(cls, word):
+      results = cls.objects(word__iexact=word)
+      if len(results) > 0:
+         return results[0]
+      else:
+         return None
 
    @classmethod
    def is_english(cls, input):
