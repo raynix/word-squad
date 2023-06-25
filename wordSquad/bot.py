@@ -61,6 +61,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('leaderboardyear', leaderboard_year))
     dispatcher.add_handler(CommandHandler('stats', stats))
     dispatcher.add_handler(CommandHandler('suggest', suggest))
+    dispatcher.add_handler(CommandHandler('theme', theme))
+    dispatcher.add_handler(CallbackQueryHandler(theme_callback, pattern='^theme:.*$'))
     dispatcher.add_handler(CallbackQueryHandler(guess_callback, pattern='^rating:.*$'))
     dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
     dispatcher.add_error_handler(error_handler, run_async=True)

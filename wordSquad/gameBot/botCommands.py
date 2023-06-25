@@ -22,24 +22,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def users(update: Update, context: CallbackContext) -> None:
-    users = TgUser.objects.all()
-    if len(users) == 0:
-        update.message.reply_text("No users have been added yet.")
-    else:
-        update.message.reply_text(
-            'Available users:\n'
-            + '\n'.join(f'{user.name} - {user.address}' for user in users)
-        )
+def theme(update: Update, context: CallbackContext) -> None:
+    choices = [
+        [InlineKeyboardButton("dark", callback_data="theme:dark"), InlineKeyboardButton("light", callback_data="theme:light")],
+    ]
+    update.message.reply_text(
+        "Please select theme for this channel:",
+        reply_markup=InlineKeyboardMarkup(choices)
+    )
 
-def add_user(update: Update, context: CallbackContext) -> None:
-    error_message = "A user name is required. eg. /adduser johny."
-    if len(context.args) == 0:
-        update.message.reply_text(error_message)
-    else:
-        new_user = TgUser(name=context.args[0])
-        new_user.save()
-        update.message.reply_text(f'New user: {new_user.name} has been created.')
+def theme_callback(update: Update, context: CallbackContext) -> None:
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    query = update.callback_query
+    data = query.data.split(':')
+    if len(data) != 2:
+        return
+    theme = data[1]
+    channel.theme = theme
+    channel.save()
+    query.edit_message_text(f"Theme has been set to {theme}")
 
 def game(update: Update, context: CallbackContext) -> None:
     choices = [
