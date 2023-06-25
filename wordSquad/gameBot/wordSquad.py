@@ -8,6 +8,7 @@ import logging
 
 from gameBot.models import TgUser, Word
 from gameBot.redisHelper import redis_cached
+from gameBot.themes import get_theme
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -23,19 +24,6 @@ SCORES = {
     'splash': 5,
     'game': 20
 }
-
-FONT_COLORS = [
-    (168, 168, 168),
-    (10, 10, 10),
-    (10, 10, 10),
-    (158, 219, 123)
-]
-
-FILL_COLORS = [
-    (225,225,225),
-    (220,220,60),
-    (151, 23, 255)
-]
 
 def top_players(scores_dict, n=20):
     # scores_dict = { 'player1': 100, 'player2': 200, ... }
@@ -53,21 +41,21 @@ class WordGuess(EmbeddedDocument):
     def correct_letters(self):
         return [x for i, x in enumerate(self.guess) if self.letter_results[i] > 0]
 
-    def draw(self, available_letters, size=100):
+    def draw(self, available_letters, theme, size=100):
         with SpooledTemporaryFile() as in_memory_file:
             length = len(self.guess)
-            img = Image.new('RGB', (size * length, int(size * length * 0.4)), color = (240,240,240))
+            img = Image.new('RGB', (size * length, int(size * length * 0.4)), color = get_theme(theme)['bg'])
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
             draw = ImageDraw.Draw(img)
             # main letters
             for idx, correctness in enumerate(self.letter_results):
-                draw.rectangle([int(size * (0.05 + idx)), int(size * 0.07), int(size * (idx + 0.9)) , int(size * 0.97)], outline='grey', width=3, fill=FILL_COLORS[correctness])
+                draw.rectangle([int(size * (0.05 + idx)), int(size * 0.07), int(size * (idx + 0.9)) , int(size * 0.97)], outline='grey', width=3, fill=get_theme(theme)['fill_colors'][correctness])
                 if correctness == MISPLACE_LETTER:
-                    draw.rectangle([int(size * (0.15 + idx)), int(size * 0.15), int(size * (idx + 0.8)), int(size * 0.85)], fill=FILL_COLORS[0])
-                draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=FONT_COLORS[correctness])
+                    draw.rectangle([int(size * (0.12 + idx)), int(size * 0.12), int(size * (idx + 0.84)), int(size * 0.9)], fill=get_theme(theme)['fill_colors'][0])
+                draw.text((int(size * (0.15 + idx)), 0), self.guess[idx].upper(), font=font, fill=get_theme(theme)['font_colors'][correctness])
             # available letters
             font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.25))
-            draw.text((int(size * 0.01), int(size * 1.1)), f'[ {"".join(available_letters).upper()} ]', font=font, fill=FONT_COLORS[3])
+            draw.text((int(size * 0.01), int(size * 1.1)), f'[ {"".join(available_letters).upper()} ]', font=font, fill=get_theme(theme)['font_colors'][3])
 
             img.save(in_memory_file, 'png')
             in_memory_file.seek(0)

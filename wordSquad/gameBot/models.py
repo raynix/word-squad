@@ -129,6 +129,7 @@ class TgUser(Document):
 class TgChannel(Document):
    tg_id = fields.IntField(primary=True)
    games_counter = fields.IntField(default=0)
+   theme = fields.StringField(default = 'dark')
 
    meta = {
       'indexes': ['tg_id']
