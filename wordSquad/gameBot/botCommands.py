@@ -160,7 +160,7 @@ def suggest(update: Update, context: CallbackContext) -> None:
             else:
                 update.message.reply_text(f"Failed to add '{suggested}'. Not found at api.dictionaryapi.dev.")
     else:
-        update.message.reply_text("Please select the suggested word, reply, then use this command.")
+        message.reply_text("Please select the suggested word, reply, then use this command.")
 
 def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
@@ -216,9 +216,9 @@ def message_developer(update: Update, context: CallbackContext) -> None:
 
         # And send it to the developer.
         context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
-        update.message.reply_text("Message left.")
+        message.reply_text("Message left.")
     else:
-        update.message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
+        message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
 
 def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
