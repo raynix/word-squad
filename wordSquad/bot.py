@@ -64,6 +64,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler('theme', theme))
     dispatcher.add_handler(CallbackQueryHandler(theme_callback, pattern='^theme:.*$'))
     dispatcher.add_handler(CallbackQueryHandler(guess_callback, pattern='^rating:.*$'))
+    dispatcher.add_handler(CallbackQueryHandler(cleanup_callback, pattern='^cleanup:.*$'))
     dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
     dispatcher.add_error_handler(error_handler, run_async=True)
 

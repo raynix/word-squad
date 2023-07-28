@@ -6,6 +6,7 @@ import datetime, time
 
 from gameBot.models import *
 from gameBot.wordSquad import *
+from gameBot.redisHelper import cache_guess, get_cached_guesses
 
 from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
@@ -106,11 +107,13 @@ def guess(update: Update, context: CallbackContext) -> None:
     logger.debug(game_session)
     if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
         if not Word.is_english(text):
-            message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
+            warning = message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
+            cache_guess(channel.tg_id, game_session.pk, warning.message_id)
             return
         new_guess = WordGuess(guess=text, by_user=user)
         game_session.add_guess(new_guess)
-        message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
+        photo_message = message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
+        cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
         if text == game_session.secret_word:
             message.reply_text(
                 f"You got it! It is '{text}'!"
@@ -133,6 +136,15 @@ def guess(update: Update, context: CallbackContext) -> None:
                 reply_markup=InlineKeyboardMarkup(choices)
             )
 
+            choices = [[
+                InlineKeyboardButton("Yes, please", callback_data=f"cleanup:{game_session.pk}:+"),
+                InlineKeyboardButton("No, keep them", callback_data=f"cleanup:{game_session.pk}:-")
+            ]]
+            message.reply_text(
+                "Would you like to clean up images of this game?",
+                reply_markup=InlineKeyboardMarkup(choices)
+            )
+
 def guess_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data.split(':')
@@ -147,6 +159,19 @@ def guess_callback(update: Update, context: CallbackContext) -> None:
         else:
             dictWord.downvote()
     query.edit_message_text("Thanks for your feedback!")
+
+def cleanup_callback(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    data = query.data.split(':')
+    if len(data) != 3:
+        return
+    game_session = data[1]
+    choice = data[2]
+    channel_id = update.effective_chat.id
+    if choice == '+':
+        for messageId in get_cached_guesses(channel_id, game_session):
+            context.bot.delete_message(int(channel_id), int(messageId))
+    query.delete_message()
 
 def suggest(update: Update, context: CallbackContext) -> None:
     message = update.message or update.edited_message
