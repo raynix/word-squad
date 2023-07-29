@@ -32,4 +32,8 @@ def cache_guess(chatId, gameId, messageId):
 
 def get_cached_guesses(chatId, gameId):
     r = redis.Redis(connection_pool=redis_pool)
-    return [ r.get(key).decode('utf-8') for key in r.keys(f'{chatId}_{gameId}_*') ]
+    keys = r.keys(f'{chatId}_{gameId}_*')
+    guesses = [ r.get(key).decode('utf-8') for key in keys ]
+    for key in keys:
+        r.delete(key)
+    return guesses
