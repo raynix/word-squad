@@ -271,4 +271,5 @@ def error_handler(update: Update, context: CallbackContext) -> None:
     context.bot.send_message(
         chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML
     )
-    update.message.reply_text("Oops something messed up here. My master has been notified.")
+    # Unnecessary
+    # update.message.reply_text("Oops something messed up here. My master has been notified.")
