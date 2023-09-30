@@ -38,3 +38,16 @@ def get_cached_guesses(chatId, gameId):
         guesses.append(r.get(key).decode('utf-8'))
         r.delete(key)
     return guesses
+
+def redis_locked(func):
+    def wrapper(*args, **kwargs):
+        r = redis.Redis(connection_pool=redis_pool)
+        lock_key = args_to_key('lock', *args, **kwargs)
+        with r.lock(lock_key):
+            print(f"locked to {lock_key}")
+            return func(*args, **kwargs)
+    return wrapper
+
+def lock(key):
+    r = redis.Redis(connection_pool=redis_pool)
+    return r.lock(key)
