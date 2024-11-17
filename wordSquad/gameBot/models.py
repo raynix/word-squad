@@ -59,9 +59,11 @@ class Word(Document):
     self.save()
 
   def rating(self):
-    hearts = 5 if self.downvotes == 0 else min(int(self.upvotes / self.downvotes * 2.5), 5)
+    if self.upvotes == 0 and self.downvotes == 0:
+      hearts = 2
+    else:
+      hearts = 5 if self.downvotes == 0 else min(int(self.upvotes / self.downvotes * 2.5), 5)
     return '❤️' * hearts + '🤍' * (5 - hearts)
-
 
   @classmethod
   def find(cls, word):
