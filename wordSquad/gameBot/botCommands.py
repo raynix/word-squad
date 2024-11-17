@@ -78,6 +78,7 @@ def game_callback(update: Update, context: CallbackContext) -> None:
         game_session = WordSquadGame.start(channel.tg_id, length)
         query.edit_message_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
+            f'Rating: {game_session.rating}\n' +
             f'Prize: {game_session.bonus_points()} points'
         )
         query.answer("Game started, have fun!", show_alert=True)

@@ -72,6 +72,7 @@ class WordSquadGame(Document):
     guesses = fields.EmbeddedDocumentListField(WordGuess)
     available_letters = fields.ListField(default=list(string.ascii_lowercase))
     difficulty = fields.StringField(default='Normal')
+    rating = ''
 
     meta = {
         'indexes': ['channel_id', 'solved']
@@ -160,6 +161,7 @@ class WordSquadGame(Document):
         game_session = WordSquadGame()
         game_session.secret_word = picked_word.word.lower()
         game_session.difficulty = picked_word.difficulty()
+        game_session.rating = picked_word.rating()
         game_session.channel_id = channel_id
         game_session.bury_treasures()
         game_session.save()
