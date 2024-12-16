@@ -4,7 +4,7 @@ metadata:
   name: word-squad
 spec:
   revisionHistoryLimit: 3
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: word-squad
@@ -41,7 +41,7 @@ spec:
                 name: word-squad-env
           env:
             - name: PROD
-              value: "true"
+              value: "false"
             - name: REDIS_HOST
               value: "redis"
           ports:
@@ -49,8 +49,8 @@ spec:
               containerPort: 8000
           resources:
             requests:
-              memory: 400Mi
-              cpu: 200m
+              memory: 500Mi
+              cpu: 500m
           livenessProbe:
             tcpSocket:
               port: 8000
