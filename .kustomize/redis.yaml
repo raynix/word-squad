@@ -13,7 +13,7 @@ spec:
         app: redis
     spec:
       containers:
-        - image: 'redis:7.0-alpine'
+        - image: "redis:7.4-alpine"
           name: redis
           ports:
             - containerPort: 6379
@@ -26,7 +26,7 @@ spec:
               port: redis
           resources:
             limits:
-              cpu: '1.0'
+              cpu: "1.0"
               memory: 1Gi
             requests:
               cpu: 100m

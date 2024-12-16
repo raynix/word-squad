@@ -1,9 +1,7 @@
-version: "3.4"
-
 services:
   mongodb:
     container_name: mongodb
-    image: mongo:6.0.2
+    image: mongo:8.0.4-noble
     ports:
       - 27017:27017
     volumes:
@@ -13,7 +11,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: pass
   redis:
     container_name: redis
-    image: redis:7.0-alpine
+    image: redis:7.4-alpine
     ports:
       - 6379:6379
 
