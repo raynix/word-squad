@@ -17,11 +17,11 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
@@ -34,16 +34,16 @@ spec:
                         - oewn-mysql
                 topologyKey: "kubernetes.io/hostname"
       containers:
-        - name: django-bot
+        - name: word-squad
           image: ghcr.io/raynix/word-squad:dev-12352750002
           envFrom:
             - secretRef:
                 name: word-squad-env
           env:
             - name: PROD
-              value: 'true'
+              value: "true"
             - name: REDIS_HOST
-              value: 'redis'
+              value: "redis"
           ports:
             - name: webhook
               containerPort: 8000
@@ -51,9 +51,9 @@ spec:
             requests:
               memory: 400Mi
               cpu: 200m
-          livenessProbe:
-            tcpSocket:
-              port: 8000
-          readinessProbe:
-            tcpSocket:
-              port: 8000
+          # livenessProbe:
+          #   tcpSocket:
+          #     port: 8000
+          # readinessProbe:
+          #   tcpSocket:
+          #     port: 8000
