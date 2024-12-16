@@ -1,4 +1,4 @@
-FROM python:3.9.14
+FROM python:3.12.8-bookworm
 
 WORKDIR /app
 COPY ./wordSquad/requirements.txt .

@@ -1,5 +1,4 @@
-psycopg2-binary==2.9.5
-python-telegram-bot==21.9
+python-telegram-bot[webhooks]==21.9
 nltk==3.7
 mongoengine~=0.24
 pillow~=9.2

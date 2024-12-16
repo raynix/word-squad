@@ -70,7 +70,7 @@ def main() -> None:
 
     # Start the Bot
     if PROD == 'true':
-    # enable webhook
+        # enable webhook
         application.run_webhook(listen="0.0.0.0", port=8000, url_path=TOKEN, webhook_url=f'https://{DOMAIN}/{TOKEN}')
     else:
         # enable polling
