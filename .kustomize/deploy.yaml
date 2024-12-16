@@ -51,9 +51,9 @@ spec:
             requests:
               memory: 400Mi
               cpu: 200m
-          # livenessProbe:
-          #   tcpSocket:
-          #     port: 8000
-          # readinessProbe:
-          #   tcpSocket:
-          #     port: 8000
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+          readinessProbe:
+            tcpSocket:
+              port: 8000
