@@ -30,7 +30,7 @@ spec:
                 name: word-squad-env
           env:
             - name: PROD
-              value: "false"
+              value: "true"
             - name: REDIS_HOST
               value: "redis"
           ports:
@@ -40,9 +40,9 @@ spec:
             requests:
               memory: 500Mi
               cpu: 500m
-          # livenessProbe:
-          #   tcpSocket:
-          #     port: 8000
-          # readinessProbe:
-          #   tcpSocket:
-          #     port: 8000
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+          readinessProbe:
+            tcpSocket:
+              port: 8000
