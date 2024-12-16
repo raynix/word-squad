@@ -22,17 +22,6 @@ spec:
                     operator: In
                     values:
                       - amd64
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - oewn-mysql
-                topologyKey: "kubernetes.io/hostname"
       containers:
         - name: word-squad
           image: ghcr.io/raynix/word-squad:dev-12354641963

@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "main"
+    paths:
+      - wordSquad/**
+      - Dockerfile
 
 env:
   build_tag: dev-${{ github.run_id }}
