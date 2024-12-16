@@ -35,7 +35,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: word-squad
-          image: ghcr.io/raynix/word-squad:dev-12352750002
+          image: ghcr.io/raynix/word-squad:dev-12353650775
           envFrom:
             - secretRef:
                 name: word-squad-env
