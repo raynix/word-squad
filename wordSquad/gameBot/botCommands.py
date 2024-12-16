@@ -8,8 +8,9 @@ from gameBot.models import *
 from gameBot.wordSquad import *
 from gameBot.redisHelper import cache_guess, get_cached_guesses, lock
 
-from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
+from telegram.constants import ParseMode
 
 from random import choice
 
@@ -23,16 +24,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def theme(update: Update, context: CallbackContext) -> None:
+async def theme(update: Update, context: CallbackContext) -> None:
     choices = [
         [InlineKeyboardButton("dark", callback_data="theme:dark"), InlineKeyboardButton("light", callback_data="theme:light")],
     ]
-    update.message.reply_text(
+    await update.message.reply_text(
         "Please select theme for this channel:",
         reply_markup=InlineKeyboardMarkup(choices)
     )
 
-def theme_callback(update: Update, context: CallbackContext) -> None:
+async def theme_callback(update: Update, context: CallbackContext) -> None:
     channel = TgChannel.find_or_create(update.effective_chat.id)
     query = update.callback_query
     data = query.data.split(':')
@@ -41,9 +42,9 @@ def theme_callback(update: Update, context: CallbackContext) -> None:
     theme = data[1]
     channel.theme = theme
     channel.save()
-    query.edit_message_text(f"Theme has been set to {theme}")
+    await query.edit_message_text(f"Theme has been set to {theme}")
 
-def game(update: Update, context: CallbackContext) -> None:
+async def game(update: Update, context: CallbackContext) -> None:
     choices = [
         [InlineKeyboardButton("Classic: 5 letters", callback_data="game:5")],
         [InlineKeyboardButton("Advanced: 6 letters", callback_data="game:6")],
@@ -57,16 +58,16 @@ def game(update: Update, context: CallbackContext) -> None:
             channel.save()
         if channel.in_trial_mode():
             WordSquadGame.start(channel.tg_id, 0)
-            update.message.reply_text(f"Started in trial mode, play {10 - channel.games_counter} more games to unlock all words.")
+            await update.message.reply_text(f"Started in trial mode, play {10 - channel.games_counter} more games to unlock all words.")
         else:
-            update.message.reply_text(
+            await update.message.reply_text(
                 "Please select game mode:",
                 reply_markup=InlineKeyboardMarkup(choices)
             )
     else:
-        update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters. You can use /giveup to quit it.')
+        await update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters. You can use /giveup to quit it.')
 
-def game_callback(update: Update, context: CallbackContext) -> None:
+async def game_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data.split(':')
     if len(data) != 2:
@@ -76,27 +77,27 @@ def game_callback(update: Update, context: CallbackContext) -> None:
     game_session = WordSquadGame.current_game(channel.tg_id)
     if game_session is None:
         game_session = WordSquadGame.start(channel.tg_id, length)
-        query.edit_message_text(
+        await query.edit_message_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
             f'Rating: {game_session.rating}\n' +
             f'Prize: {game_session.bonus_points()} points'
         )
-        query.answer("Game started, have fun!", show_alert=True)
+        await query.answer("Game started, have fun!", show_alert=True)
 
-def endgame(update: Update, context: CallbackContext) -> None:
+async def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     if game_session:
         game_session.delete()
-        update.message.reply_text(f'Maybe the word "{game_session.secret_word}" is a bit too random. Please use /game to start a new one.')
+        await update.message.reply_text(f'Maybe the word "{game_session.secret_word}" is a bit too random. Please use /game to start a new one.')
 
-def game_score(update: Update, context: CallbackContext) -> None:
+async def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     if game_session:
-        update.message.reply_text(game_session.print_score())
+        await update.message.reply_text(game_session.print_score())
 
-def guess(update: Update, context: CallbackContext) -> None:
+async def guess(update: Update, context: CallbackContext) -> None:
     message = update.message
     if not message:
         return
@@ -114,13 +115,13 @@ def guess(update: Update, context: CallbackContext) -> None:
                 return
             new_guess = WordGuess(guess=text, by_user=user)
             game_session.add_guess(new_guess)
-            photo_message = message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
+            photo_message = await message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
             cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
             if text == game_session.secret_word:
-                message.reply_text(
+                await message.reply_text(
                     f"You got it! It is '{text}'!"
                 )
-                message.reply_text(
+                await message.reply_text(
                     f"For the meanings of '{text}' please see https://www.collinsdictionary.com/us/dictionary/english/{text}"
                 )
                 game_session.solved = True
@@ -128,12 +129,12 @@ def guess(update: Update, context: CallbackContext) -> None:
                 game_session.save()
                 channel.games_counter += 1
                 channel.save()
-                message.reply_text(game_session.print_score())
+                await message.reply_text(game_session.print_score())
                 choices = [[
                     InlineKeyboardButton("👍", callback_data=f"rating:{text}:+"),
                     InlineKeyboardButton("👎", callback_data=f"rating:{text}:-")
                 ]]
-                message.reply_text(
+                await message.reply_text(
                     "Do you like this word?",
                     reply_markup=InlineKeyboardMarkup(choices)
                 )
@@ -142,12 +143,12 @@ def guess(update: Update, context: CallbackContext) -> None:
                     InlineKeyboardButton("Yes, please", callback_data=f"cleanup:{game_session.pk}:+"),
                     InlineKeyboardButton("No, keep them", callback_data=f"cleanup:{game_session.pk}:-")
                 ]]
-                message.reply_text(
+                await message.reply_text(
                     "Would you like to clean up images of this game?",
                     reply_markup=InlineKeyboardMarkup(choices)
                 )
 
-def guess_callback(update: Update, context: CallbackContext) -> None:
+async def guess_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data.split(':')
     if len(data) != 3:
@@ -160,9 +161,9 @@ def guess_callback(update: Update, context: CallbackContext) -> None:
             dictWord.upvote()
         else:
             dictWord.downvote()
-    query.edit_message_text("Thanks for your feedback!")
+    await query.edit_message_text("Thanks for your feedback!")
 
-def cleanup_callback(update: Update, context: CallbackContext) -> None:
+async def cleanup_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data.split(':')
     if len(data) != 3:
@@ -173,38 +174,38 @@ def cleanup_callback(update: Update, context: CallbackContext) -> None:
     with lock(f"lock_clean_{channel_id}"):
         if choice == '+':
             for messageId in get_cached_guesses(channel_id, game_session):
-                context.bot.delete_message(int(channel_id), int(messageId))
-        query.delete_message()
+                await context.bot.delete_message(int(channel_id), int(messageId))
+        await query.delete_message()
 
-def suggest(update: Update, context: CallbackContext) -> None:
+async def suggest(update: Update, context: CallbackContext) -> None:
     message = update.message or update.edited_message
     if message.reply_to_message and message.reply_to_message.text:
         suggested = message.reply_to_message.text
         if suggested.isalpha():
             if Word.is_english(suggested):
-                update.message.reply_text(f"The word '{suggested}' is already in my dictionary.")
+                await update.message.reply_text(f"The word '{suggested}' is already in my dictionary.")
             elif Word.ingest(suggested):
-                update.message.reply_text(f"The word '{suggested}' has been added.")
+                await update.message.reply_text(f"The word '{suggested}' has been added.")
             else:
-                update.message.reply_text(f"Failed to add '{suggested}'. Not found at api.dictionaryapi.dev.")
+                await update.message.reply_text(f"Failed to add '{suggested}'. Not found at api.dictionaryapi.dev.")
     else:
-        message.reply_text("Please select the suggested word, reply, then use this command.")
+        await message.reply_text("Please select the suggested word, reply, then use this command.")
 
-def synonyms(update: Update, context: CallbackContext) -> None:
+async def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
     if game_session:
         secret_word = Word.objects.filter(word=game_session.secret_word).first()
-        update.message.reply_text(','.join(secret_word.synonyms()) or "No synonyms found.")
+        await update.message.reply_text(','.join(secret_word.synonyms()) or "No synonyms found.")
 
-def stats(update: Update, context: CallbackContext) -> None:
+async def stats(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    update.message.reply_text(
+    await update.message.reply_text(
         WordSquadGame.channel_rank(channel_id) + '\n' +
         WordSquadGame.histogram()
     )
 
-def info(update: Update, context: CallbackContext) -> None:
+async def info(update: Update, context: CallbackContext) -> None:
     try:
         with open('/app/build-time') as f:
             build_time = f.read()
@@ -212,7 +213,7 @@ def info(update: Update, context: CallbackContext) -> None:
         build_time = 'Timestamp not found.'
     start_ts = psutil.Process(os.getpid()).create_time()
     current_ts = time.time()
-    update.message.reply_text(
+    await update.message.reply_text(
         f'Build-time: {build_time}\n' +
         f"Uptime since deploy: {datetime.timedelta(seconds=int(current_ts-start_ts))}\n" +
         f"CPU: {psutil.cpu_percent()}%\n" +
@@ -220,20 +221,20 @@ def info(update: Update, context: CallbackContext) -> None:
         "This game bot will always be free to play. If you'd like to donate a few bucks to keep me encouraged, please go to https://patreon.com/raynix"
     )
 
-def leaderboard(update: Update, context: CallbackContext) -> None:
+async def leaderboard(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))
+    await update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))
 
-def leaderboard_year(update: Update, context: CallbackContext) -> None:
+async def leaderboard_year(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id, days=365))
+    await update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id, days=365))
 
-def hint(update: Update, context: CallbackContext) -> None:
+async def hint(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     game_session = WordSquadGame.current_game(channel_id)
-    update.message.reply_text(' '.join(game_session.available_letters).upper())
+    await update.message.reply_text(' '.join(game_session.available_letters).upper())
 
-def message_developer(update: Update, context: CallbackContext) -> None:
+async def message_developer(update: Update, context: CallbackContext) -> None:
     """Leave a message to the developer."""
     message = update.message or update.edited_message
     if message.reply_to_message and message.reply_to_message.text:
@@ -243,12 +244,12 @@ def message_developer(update: Update, context: CallbackContext) -> None:
         )
 
         # And send it to the developer.
-        context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
-        message.reply_text("Message left.")
+        await context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=text, parse_mode=ParseMode.HTML)
+        await message.reply_text("Message left.")
     else:
-        message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
+        await message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
 
-def error_handler(update: Update, context: CallbackContext) -> None:
+async def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
     # Log the error before we do anything else, so we can see it even if something breaks.
     logger.error(msg="Exception while handling an update:", exc_info=context.error)
@@ -271,8 +272,8 @@ def error_handler(update: Update, context: CallbackContext) -> None:
     )
 
     # Finally, send the message
-    context.bot.send_message(
+    await context.bot.send_message(
         chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML
     )
     # Unnecessary
-    # update.message.reply_text("Oops something messed up here. My master has been notified.")
+    # await update.message.reply_text("Oops something messed up here. My master has been notified.")

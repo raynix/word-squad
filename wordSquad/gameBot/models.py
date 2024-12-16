@@ -6,7 +6,7 @@ import re
 def sanitize(string):
   if string is None:
     return ''
-  return re.sub('[\.\$]', '_', string)
+  return re.sub('[\\.\\$]', '_', string)
 
 class Word(Document):
   word = fields.StringField()

@@ -1,16 +1,17 @@
 import os
 import logging
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler, CallbackContext, MessageHandler
+from telegram.ext import filters
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 
 from gameBot.botCommands import *
 import mongoengine
 
 mongoengine.connect(
-    db=os.environ['MONGODB_DB'],
-    host=os.environ['MONGODB_HOST'],
-    username=os.environ['MONGODB_USERNAME'],
-    password=os.environ['MONGODB_PASSWORD']
+    db=os.environ.get('MONGODB_DB', 'wordsquad'),
+    host=os.environ.get('MONGODB_HOST', 'localhost'),
+    username=os.environ.get('MONGODB_USERNAME', 'root'),
+    password=os.environ.get('MONGODB_PASSWORD', 'pass'),
 )
 
 TOKEN = os.environ["BOT_TOKEN"]
@@ -22,9 +23,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def help(update: Update, context: CallbackContext) -> None:
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Inform user about what this bot can do"""
-    update.message.reply_text(
+    await update.message.reply_text(
         'Use /game to start a new game and type a word to guess.\n' +
         'In the response:\n' +
         '- Gray means wrong letter\n' +
@@ -34,51 +35,48 @@ def help(update: Update, context: CallbackContext) -> None:
         'Get all letters purple to win.'
     )
 
-def debug(update: Update, context: CallbackContext) -> None:
+async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Debugging function"""
     logger.info(update)
     logger.info(context)
 
-# def test(update: Update, context: CallbackContext) -> None:
+# async def test(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 #     pass
 
 def main() -> None:
     """Run bot."""
     # Create the Updater and pass it your bot's token.
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler('help', help))
-    # dispatcher.add_handler(CommandHandler('debug', debug))
-    # dispatcher.add_handler(CommandHandler('test', test))
-    dispatcher.add_handler(CommandHandler('game', game))
-    dispatcher.add_handler(CallbackQueryHandler(game_callback, pattern='^game:[0-9]$'))
-    dispatcher.add_handler(CommandHandler('endgame', endgame))
-    dispatcher.add_handler(CommandHandler('giveup', endgame))
-    dispatcher.add_handler(CommandHandler('gamescore', game_score))
-    dispatcher.add_handler(CommandHandler('info', info))
-    dispatcher.add_handler(CommandHandler('message_dev', message_developer))
-    dispatcher.add_handler(CommandHandler('leaderboard', leaderboard))
-    dispatcher.add_handler(CommandHandler('leaderboardyear', leaderboard_year))
-    dispatcher.add_handler(CommandHandler('stats', stats))
-    dispatcher.add_handler(CommandHandler('suggest', suggest))
-    dispatcher.add_handler(CommandHandler('theme', theme))
-    dispatcher.add_handler(CallbackQueryHandler(theme_callback, pattern='^theme:.*$'))
-    dispatcher.add_handler(CallbackQueryHandler(guess_callback, pattern='^rating:.*$'))
-    dispatcher.add_handler(CallbackQueryHandler(cleanup_callback, pattern='^cleanup:.*$'))
-    dispatcher.add_handler(MessageHandler(Filters.text, guess, run_async=True))
-    dispatcher.add_error_handler(error_handler, run_async=True)
+    application = ApplicationBuilder().token(TOKEN).build()
+    application.add_handler(CommandHandler('help', help))
+    # application.add_handler(CommandHandler('debug', debug))
+    # application.add_handler(CommandHandler('test', test))
+    application.add_handler(CommandHandler('game', game))
+    application.add_handler(CallbackQueryHandler(game_callback, pattern='^game:[0-9]$'))
+    application.add_handler(CommandHandler('endgame', endgame))
+    application.add_handler(CommandHandler('giveup', endgame))
+    application.add_handler(CommandHandler('gamescore', game_score))
+    application.add_handler(CommandHandler('info', info))
+    application.add_handler(CommandHandler('message_dev', message_developer))
+    application.add_handler(CommandHandler('leaderboard', leaderboard))
+    application.add_handler(CommandHandler('leaderboardyear', leaderboard_year))
+    application.add_handler(CommandHandler('stats', stats))
+    application.add_handler(CommandHandler('suggest', suggest))
+    application.add_handler(CommandHandler('theme', theme))
+    application.add_handler(CallbackQueryHandler(theme_callback, pattern='^theme:.*$'))
+    application.add_handler(CallbackQueryHandler(guess_callback, pattern='^rating:.*$'))
+    application.add_handler(CallbackQueryHandler(cleanup_callback, pattern='^cleanup:.*$'))
+    application.add_handler(MessageHandler(filters.TEXT, guess, block=False))
+    application.add_error_handler(error_handler, block=False)
 
     # Start the Bot
     if PROD == 'true':
     # enable webhook
-        updater.start_webhook(listen="0.0.0.0", port=8000, url_path=TOKEN, webhook_url=f'https://{DOMAIN}/{TOKEN}')
+        application.run_webhook(listen="0.0.0.0", port=8000, url_path=TOKEN, webhook_url=f'https://{DOMAIN}/{TOKEN}')
     else:
         # enable polling
-        updater.start_polling()
+        application.run_polling()
     # Run the bot until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT
-    updater.idle()
-
 
 if __name__ == '__main__':
     main()
