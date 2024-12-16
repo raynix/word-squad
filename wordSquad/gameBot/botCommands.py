@@ -110,7 +110,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
         logger.debug(game_session)
         if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
             if not Word.is_english(text):
-                warning = message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
+                warning = await message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
                 cache_guess(channel.tg_id, game_session.pk, warning.message_id)
                 return
             new_guess = WordGuess(guess=text, by_user=user)
