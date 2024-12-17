@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: webhook
+  name: word-squad
 spec:
   ports:
-    - name: webhook
+    - name: http_word_squad
       port: 8000
       targetPort: 8000
       protocol: TCP
@@ -14,7 +14,7 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: webhook
+  name: word-squad
 spec:
   gateways:
     - istio-system/awes-gateway
@@ -22,7 +22,7 @@ spec:
     - wordsquad.awes.one
   http:
     - route:
-      - destination:
-          host: webhook
-          port:
-            number: 8000
+        - destination:
+            host: word-squad
+            port:
+              number: 8000
