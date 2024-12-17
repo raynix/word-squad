@@ -2,6 +2,6 @@ python-telegram-bot[ext]==21.9
 nltk==3.7
 mongoengine~=0.24
 pillow~=9.2
-redis~=4.5
+redis~=5.2
 psutil
 requests~=2.30
