@@ -105,48 +105,47 @@ async def guess(update: Update, context: CallbackContext) -> None:
     text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
     channel = TgChannel.find_or_create(update.effective_chat.id)
-    with lock(f"lock_guess_{channel.tg_id}"):
-        game_session = WordSquadGame.current_game(channel.tg_id)
-        logger.debug(game_session)
-        if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
-            if not Word.is_english(text):
-                warning = await message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
-                cache_guess(channel.tg_id, game_session.pk, warning.message_id)
-                return
-            new_guess = WordGuess(guess=text, by_user=user)
-            game_session.add_guess(new_guess)
-            photo_message = await message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
-            cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
-            if text == game_session.secret_word:
-                await message.reply_text(
-                    f"You got it! It is '{text}'!"
-                )
-                await message.reply_text(
-                    f"For the meanings of '{text}' please see https://www.collinsdictionary.com/us/dictionary/english/{text}"
-                )
-                game_session.solved = True
-                game_session.add_score(user, game_session.bonus_points())
-                game_session.save()
-                channel.games_counter += 1
-                channel.save()
-                await message.reply_text(game_session.print_score())
-                choices = [[
-                    InlineKeyboardButton("👍", callback_data=f"rating:{text}:+"),
-                    InlineKeyboardButton("👎", callback_data=f"rating:{text}:-")
-                ]]
-                await message.reply_text(
-                    "Do you like this word?",
-                    reply_markup=InlineKeyboardMarkup(choices)
-                )
+    game_session = WordSquadGame.current_game(channel.tg_id)
+    logger.debug(game_session)
+    if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
+        if not Word.is_english(text):
+            warning = await message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
+            cache_guess(channel.tg_id, game_session.pk, warning.message_id)
+            return
+        new_guess = WordGuess(guess=text, by_user=user)
+        game_session.add_guess(new_guess)
+        photo_message = await message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
+        cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
+        if text == game_session.secret_word:
+            await message.reply_text(
+                f"You got it! It is '{text}'!"
+            )
+            await message.reply_text(
+                f"For the meanings of '{text}' please see https://www.collinsdictionary.com/us/dictionary/english/{text}"
+            )
+            game_session.solved = True
+            game_session.add_score(user, game_session.bonus_points())
+            game_session.save()
+            channel.games_counter += 1
+            channel.save()
+            await message.reply_text(game_session.print_score())
+            choices = [[
+                InlineKeyboardButton("👍", callback_data=f"rating:{text}:+"),
+                InlineKeyboardButton("👎", callback_data=f"rating:{text}:-")
+            ]]
+            await message.reply_text(
+                "Do you like this word?",
+                reply_markup=InlineKeyboardMarkup(choices)
+            )
 
-                choices = [[
-                    InlineKeyboardButton("Yes, please", callback_data=f"cleanup:{game_session.pk}:+"),
-                    InlineKeyboardButton("No, keep them", callback_data=f"cleanup:{game_session.pk}:-")
-                ]]
-                await message.reply_text(
-                    "Would you like to clean up images of this game?",
-                    reply_markup=InlineKeyboardMarkup(choices)
-                )
+            choices = [[
+                InlineKeyboardButton("Yes, please", callback_data=f"cleanup:{game_session.pk}:+"),
+                InlineKeyboardButton("No, keep them", callback_data=f"cleanup:{game_session.pk}:-")
+            ]]
+            await message.reply_text(
+                "Would you like to clean up images of this game?",
+                reply_markup=InlineKeyboardMarkup(choices)
+            )
 
 async def guess_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -171,11 +170,10 @@ async def cleanup_callback(update: Update, context: CallbackContext) -> None:
     game_session = data[1]
     choice = data[2]
     channel_id = update.effective_chat.id
-    with lock(f"lock_clean_{channel_id}"):
-        if choice == '+':
-            for messageId in get_cached_guesses(channel_id, game_session):
-                await context.bot.delete_message(int(channel_id), int(messageId))
-        await query.delete_message()
+    if choice == '+':
+        for messageId in get_cached_guesses(channel_id, game_session):
+            await context.bot.delete_message(int(channel_id), int(messageId))
+    await query.delete_message()
 
 async def suggest(update: Update, context: CallbackContext) -> None:
     message = update.message or update.edited_message
