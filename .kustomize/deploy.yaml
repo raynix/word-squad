@@ -34,7 +34,7 @@ spec:
             - name: REDIS_HOST
               value: "redis"
           ports:
-            - name: http_word_squad
+            - name: http-word-squad
               containerPort: 8000
           resources:
             requests:

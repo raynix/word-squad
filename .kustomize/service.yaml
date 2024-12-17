@@ -4,7 +4,7 @@ metadata:
   name: word-squad
 spec:
   ports:
-    - name: http_word_squad
+    - name: http-word-squad
       port: 8000
       targetPort: 8000
       protocol: TCP
