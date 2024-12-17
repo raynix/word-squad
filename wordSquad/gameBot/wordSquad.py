@@ -149,10 +149,6 @@ class WordSquadGame(Document):
         )
 
     @classmethod
-    def current_game(cls, channel_id):
-        return cls.objects(channel_id = channel_id, solved = False).first()
-
-    @classmethod
     def start(cls, channel_id, length):
         if length == 0:
             picked_word = Word.pick_trial()
@@ -248,3 +244,41 @@ class WordSquadGame(Document):
             f"Rank of this channel:\n" +
             f"With {channel_count} games played this channel is No.{channel_rank} in total {total_channels + 1} channels.\n"
         )
+
+class TgChannel(Document):
+    tg_id = fields.IntField(primary=True)
+    games_counter = fields.IntField(default=0)
+    theme = fields.StringField(default = 'dark')
+    current_game_type = fields.StringField(default = 'none')
+    current_game_id = fields.ObjectIdField()
+
+    meta = {
+      'indexes': ['tg_id']
+    }
+
+    def __str__(self):
+      return f'channel:{self.tg_id}, games:{self.games_counter}, current_game:{self.current_game_type}, current_game_id:{self.current_game_id}'
+
+    def current_game(self):
+      if self.current_game_type == 'WordSquadGame':
+        return WordSquadGame.objects(pk=self.current_game_id).first()
+      else:
+        return None
+
+    def start_game(self, game):
+      self.current_game_type = game.__class__.__name__
+      self.current_game_id = game.pk
+      self.save()
+
+    @classmethod
+    def find_or_create(cls, tg_channel_id):
+      channel = cls.objects(tg_id=tg_channel_id).first()
+      if channel is None:
+        channel = TgChannel(
+          tg_id = tg_channel_id
+        )
+        channel.save()
+      return channel
+
+    def in_trial_mode(self):
+      return self.games_counter < 10

@@ -51,13 +51,15 @@ async def game(update: Update, context: CallbackContext) -> None:
         [InlineKeyboardButton("Hardcore: 7 letters", callback_data="game:7")]
     ]
     channel = TgChannel.find_or_create(update.effective_chat.id)
-    game_session = WordSquadGame.current_game(channel.tg_id)
+    game_session = channel.current_game()
     if game_session is None:
         if channel.games_counter == 0:
             channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
             channel.save()
         if channel.in_trial_mode():
-            WordSquadGame.start(channel.tg_id, 0)
+            channel.start_game(WordSquadGame.start(channel.tg_id, 0))
+            channel.save()
+            logger.info(channel)
             await update.message.reply_text(f"Started in trial mode, play {10 - channel.games_counter} more games to unlock all words.")
         else:
             await update.message.reply_text(
@@ -74,9 +76,10 @@ async def game_callback(update: Update, context: CallbackContext) -> None:
         return
     length = data[1]
     channel = TgChannel.find_or_create(update.effective_chat.id)
-    game_session = WordSquadGame.current_game(channel.tg_id)
+    game_session = channel.current_game()
     if game_session is None:
         game_session = WordSquadGame.start(channel.tg_id, length)
+        channel.start_game(game_session)
         await query.edit_message_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
             f'Rating: {game_session.rating}\n' +
@@ -86,14 +89,17 @@ async def game_callback(update: Update, context: CallbackContext) -> None:
 
 async def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = channel.current_game()
     if game_session:
-        game_session.delete()
         await update.message.reply_text(f'Maybe the word "{game_session.secret_word}" is a bit too random. Please use /game to start a new one.')
+        channel.current_game_type = 'none'
+        channel.save()
 
 async def game_score(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = channel.current_game()
     if game_session:
         await update.message.reply_text(game_session.print_score())
 
@@ -105,7 +111,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
     text = message.text.lower()
     logger.debug(f'guessed {text} by {user.name}')
     channel = TgChannel.find_or_create(update.effective_chat.id)
-    game_session = WordSquadGame.current_game(channel.tg_id)
+    game_session = channel.current_game()
     logger.debug(game_session)
     if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
         if not Word.is_english(text):
@@ -127,6 +133,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             game_session.add_score(user, game_session.bonus_points())
             game_session.save()
             channel.games_counter += 1
+            channel.current_game_type = 'none'
             channel.save()
             await message.reply_text(game_session.print_score())
             choices = [[
@@ -191,7 +198,8 @@ async def suggest(update: Update, context: CallbackContext) -> None:
 
 async def synonyms(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = channel.current_game()
     if game_session:
         secret_word = Word.objects.filter(word=game_session.secret_word).first()
         await update.message.reply_text(','.join(secret_word.synonyms()) or "No synonyms found.")
@@ -229,7 +237,8 @@ async def leaderboard_year(update: Update, context: CallbackContext) -> None:
 
 async def hint(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
-    game_session = WordSquadGame.current_game(channel_id)
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = channel.current_game()
     await update.message.reply_text(' '.join(game_session.available_letters).upper())
 
 async def message_developer(update: Update, context: CallbackContext) -> None:

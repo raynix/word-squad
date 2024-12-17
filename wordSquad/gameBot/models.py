@@ -132,25 +132,3 @@ class TgUser(Document):
         )
         user.save()
     return user
-
-class TgChannel(Document):
-  tg_id = fields.IntField(primary=True)
-  games_counter = fields.IntField(default=0)
-  theme = fields.StringField(default = 'dark')
-
-  meta = {
-    'indexes': ['tg_id']
-  }
-
-  @classmethod
-  def find_or_create(cls, tg_channel_id):
-    channel = cls.objects(tg_id=tg_channel_id).first()
-    if channel is None:
-      channel = TgChannel(
-        tg_id = tg_channel_id
-      )
-      channel.save()
-    return channel
-
-  def in_trial_mode(self):
-    return self.games_counter < 10
