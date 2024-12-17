@@ -1,7 +1,7 @@
 import redis
 import os
 
-redis_pool = redis.ConnectionPool(host=os.environ.get("REDIS_HOST", default='127.0.0.1'), port=6379, db=0)
+redis_pool = redis.ConnectionPool(host=os.environ.get("REDIS_HOST", default='127.0.0.1'), port=6379, db=0, socket_keepalive=True, socket_timeout=3)
 
 def args_to_key(*args, **kwargs):
     params = [arg.__name__ if callable(arg) else str(arg) for arg in args] + [str(kwarg) for kwarg in kwargs.values()]
