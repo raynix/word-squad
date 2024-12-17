@@ -1,7 +1,8 @@
 import redis
 import os
 
-redis_pool = redis.ConnectionPool(host=os.environ.get("REDIS_HOST", default='127.0.0.1'), port=6379, db=0, socket_keepalive=True, socket_timeout=3)
+def get_redis():
+    return redis.Redis(host=os.environ.get("REDIS_HOST", default='127.0.0.1'), db=0, socket_timeout=3)
 
 def args_to_key(*args, **kwargs):
     params = [arg.__name__ if callable(arg) else str(arg) for arg in args] + [str(kwarg) for kwarg in kwargs.values()]
@@ -9,7 +10,7 @@ def args_to_key(*args, **kwargs):
 
 def redis_cached(func):
     def wrapper(*args, **kwargs):
-        r = redis.Redis(connection_pool=redis_pool)
+        r = get_redis()
         cache_key = args_to_key(func, *args, **kwargs)
         cached = r.get(cache_key)
         if cached:
@@ -24,14 +25,14 @@ def redis_cached(func):
     return wrapper
 
 def cache_guess(chatId, gameId, messageId):
-    r = redis.Redis(connection_pool=redis_pool)
+    r = get_redis()
     cache_key = args_to_key(chatId, gameId, messageId)
     if r.get(cache_key):
         return
     r.setex(cache_key, 3600 * 48, messageId)
 
 def get_cached_guesses(chatId, gameId):
-    r = redis.Redis(connection_pool=redis_pool)
+    r = get_redis()
     keys = r.keys(f'{chatId}_{gameId}_*')
     guesses = []
     for key in keys:
@@ -41,7 +42,7 @@ def get_cached_guesses(chatId, gameId):
 
 def redis_locked(func):
     def wrapper(*args, **kwargs):
-        r = redis.Redis(connection_pool=redis_pool)
+        r = get_redis()
         lock_key = args_to_key('lock', *args, **kwargs)
         with r.lock(lock_key):
             print(f"locked to {lock_key}")
@@ -49,5 +50,5 @@ def redis_locked(func):
     return wrapper
 
 def lock(key):
-    r = redis.Redis(connection_pool=redis_pool)
+    r = get_redis()
     return r.lock(key)
