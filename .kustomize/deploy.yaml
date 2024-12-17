@@ -24,7 +24,7 @@ spec:
                       - amd64
       containers:
         - name: word-squad
-          image: ghcr.io/raynix/word-squad:dev-12363814455
+          image: ghcr.io/raynix/word-squad:dev-12365732577
           envFrom:
             - secretRef:
                 name: word-squad-env
