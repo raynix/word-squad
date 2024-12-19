@@ -35,7 +35,7 @@ jobs:
         run: |
           pwd
           ls -lht
-          sed -i -E "s|(image: ghcr.io/raynix/word-squad:).*|\1${{ env.build_tag }}|g" .kustomize/deploy.yaml
+          sed -i -E "s|(newTag: ).*|\1${{ env.build_tag }}|g" .kustomize/kustomization.yaml
       - name: Auto commit & push changes
         run: |
           git config --global user.name 'raynix Bot'

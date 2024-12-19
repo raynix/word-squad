@@ -19,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main() -> None:
-    while True:
+    for i in range(100):
         word = Word.pick_one(5)
         logger.info(f"Processing thesaurus for word: {word.word}:{word.fof}...")
         if word.fof == FofState.ready:

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Cronjob
+metadata:
+  name: word-squad-fof
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: word-squad-fof
+              image: ghcr.io/raynix/word-squad:dev-12374756364
+              command:
+                - python
+                - fof-job.py
+              envFrom:
+                - secretRef:
+                    name: word-squad-env
+              resources:
+                requests:
+                  memory: 200Mi
+                  cpu: 200m
+          restartPolicy: Never

@@ -8,3 +8,8 @@ resources:
   - service.yaml
   - redis.yaml
   - word-squad-env.yaml
+  - cronjob.yaml
+
+images:
+  - name: ghcr.io/raynix/word-squad
+    newTag: dev-12374756364
