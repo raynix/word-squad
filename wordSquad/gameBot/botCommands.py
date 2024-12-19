@@ -52,6 +52,11 @@ async def game(update: Update, context: CallbackContext) -> None:
     ]
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = channel.current_game()
+    announcements = Announcement.fetch_new_messages(channel.announcement_timestamp)
+    if len(announcements) > 0:
+        await update.message.reply_text('Some changes since your last game:\n' + '\n'.join(announcements))
+        channel.announcement_timestamp = datetime.datetime.now()
+        channel.save()
     if game_session is None:
         if channel.games_counter == 0:
             channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
@@ -83,9 +88,8 @@ async def game_callback(update: Update, context: CallbackContext) -> None:
         await query.edit_message_text(
             f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
             f'Rating: {game_session.rating}\n' +
-            f'Prize: {game_session.bonus_points()} points'
+            f'Prize: {game_session.bonus_points()} points, good luck!'
         )
-        await query.answer("Game started, have fun!", show_alert=True)
 
 async def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
@@ -255,6 +259,12 @@ async def message_developer(update: Update, context: CallbackContext) -> None:
         await message.reply_text("Message left.")
     else:
         await message.reply_text("Please reply a message, then use this command. The replied message will be delivered.")
+
+async def push_announcement(update: Update, context: CallbackContext) -> None:
+    message = update.message or update.edited_message
+    if message.reply_to_message and message.reply_to_message.text and message.from_user.id == DEVELOPER_CHAT_ID:
+        Announcement(message=message.reply_to_message.text).save()
+        await message.reply_text("Announcement saved.")
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""

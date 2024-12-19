@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 import sys
 from mongoengine import Document, fields
 import random
@@ -7,7 +8,6 @@ import re
 import logging
 
 from wordhoard import Antonyms, Synonyms
-from gettext import find
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -175,3 +175,17 @@ class TgUser(Document):
         )
         user.save()
     return user
+
+class Announcement(Document):
+  message = fields.StringField()
+  created = fields.DateTimeField(default = datetime.now())
+  meta = {
+    'indexes': ['created']
+  }
+
+  def __str__(self):
+    return f'{self.created}: {self.message}'
+
+  @classmethod
+  def fetch_new_messages(cls, channel_timestamp: datetime):
+    return [a.message for a in Announcement.objects(created__gt=channel_timestamp)]

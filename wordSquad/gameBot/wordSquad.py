@@ -251,6 +251,7 @@ class TgChannel(Document):
     theme = fields.StringField(default = 'dark')
     current_game_type = fields.StringField(default = 'none')
     current_game_id = fields.ObjectIdField()
+    announcement_timestamp = fields.DateTimeField(default=datetime.datetime.utcnow)
 
     meta = {
       'indexes': ['tg_id']

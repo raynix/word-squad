@@ -62,6 +62,7 @@ def main() -> None:
     application.add_handler(CommandHandler('stats', stats))
     application.add_handler(CommandHandler('suggest', suggest))
     application.add_handler(CommandHandler('theme', theme))
+    application.add_handler(CommandHandler('push_announcement', push_announcement))
     application.add_handler(CallbackQueryHandler(theme_callback, pattern='^theme:.*$'))
     application.add_handler(CallbackQueryHandler(guess_callback, pattern='^rating:.*$'))
     application.add_handler(CallbackQueryHandler(cleanup_callback, pattern='^cleanup:.*$'))
