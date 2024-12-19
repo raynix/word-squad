@@ -18,8 +18,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+batch_size = int(os.environ.get('BATCH_SIZE', 100))
+
 def main() -> None:
-    for i in range(100):
+    for i in range(batch_size):
         word = Word.pick_one(5)
         logger.info(f"Processing thesaurus for word: {word.word}:{word.fof}...")
         if word.fof == FofState.ready:

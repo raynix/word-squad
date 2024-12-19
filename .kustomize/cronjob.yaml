@@ -18,6 +18,9 @@ spec:
               envFrom:
                 - secretRef:
                     name: word-squad-env
+              env:
+                - name: BATCH_SIZE
+                  value: "65"
               resources:
                 requests:
                   memory: 200Mi
