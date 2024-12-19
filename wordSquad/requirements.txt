@@ -5,3 +5,4 @@ pillow~=9.2
 redis~=5.2
 psutil
 requests~=2.30
+wordhoard~=1.5

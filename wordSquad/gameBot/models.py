@@ -1,20 +1,40 @@
+from enum import Enum
+import sys
 from mongoengine import Document, fields
 import random
 import requests
 import re
+import logging
+
+from wordhoard import Antonyms, Synonyms
+from gettext import find
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 def sanitize(string):
   if string is None:
     return ''
   return re.sub('[\\.\\$]', '_', string)
 
+class FofState(Enum):
+  unknown = 'unknown'
+  ready = 'ready'
+  failed = 'failed'
+
 class Word(Document):
   word = fields.StringField()
   definition = fields.ListField(default=[])
   upvotes = fields.IntField(default = 0)
   downvotes = fields.IntField(default = 0)
+  antonyms = fields.ListField(default=[])
+  synonyms = fields.ListField(default=[])
+  fof = fields.EnumField(FofState, default=FofState.unknown)
+
   meta = {
-    'indexes': ['word']
+    'indexes': ['word', 'fof']
   }
 
   trials = [
@@ -41,8 +61,31 @@ class Word(Document):
     else:
         return 'Easy'
 
-  def synonyms(self):
-    return ['Not implemented']
+  def prepare_synonyms(self):
+    try:
+      self.synonyms = [
+        x.lower() for x in set(Synonyms(search_string=self.word).find_synonyms())
+        if x.lower().find(self.word.lower()) == -1
+      ]
+    except Exception as e:
+      logger.error(f"Error finding synonyms for {self.word}: {e}")
+
+  def prepare_antonyms(self):
+    try:
+      self.antonyms = [
+        x.lower() for x in set(Antonyms(search_string=self.word).find_antonyms())
+        if x.lower().find(self.word.lower()) == -1
+      ]
+    except Exception as e:
+      logger.error(f"Error finding antonyms for {self.word}: {e}")
+
+  def prepare_thesaurus(self):
+    self.prepare_synonyms()
+    logger.info(f"Synonyms for {self.word}: {self.synonyms}")
+    self.prepare_antonyms()
+    logger.info(f"Antonyms for {self.word}: {self.antonyms}")
+    self.fof = FofState.ready if len(self.synonyms) > 0 and len(self.antonyms) > 0 else FofState.failed
+    self.save()
 
   def full_meanings(self):
     return [f"- {d['meaning']}" for d in self.definition ]
@@ -86,7 +129,7 @@ class Word(Document):
     picked = None
     pipeline = [
       {
-        "$match": {"word": {"$regex": f"^[a-z]{{{length}}}$", "$options": 'i' }}
+        "$match": {"word": {"$regex": f"^[a-zA-Z]{{{length}}}$" }}
       },
       {
         "$sample": {"size": 1}

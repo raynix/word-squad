@@ -167,7 +167,7 @@ async def guess_callback(update: Update, context: CallbackContext) -> None:
             dictWord.upvote()
         else:
             dictWord.downvote()
-    await query.edit_message_text("Thanks for your feedback!")
+    await query.delete_message()
 
 async def cleanup_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
