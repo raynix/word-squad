@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: word-squad-fof
 spec:
-  schedule: "*/20 * * * *"
+  schedule: "*/20 */2 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
