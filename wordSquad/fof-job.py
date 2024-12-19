@@ -19,6 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 batch_size = int(os.environ.get('BATCH_SIZE', 100))
+batch_interval = int(os.environ.get('BATCH_INTERVAL', 10))
 
 def main() -> None:
     for i in range(batch_size):
@@ -31,7 +32,7 @@ def main() -> None:
             logger.info(f"Word {word.word} has failed, skipping...")
             continue
         word.prepare_thesaurus()
-        time.sleep(5)
+        time.sleep(batch_interval)
 
 if __name__ == '__main__':
     main()
