@@ -1,14 +1,17 @@
 from PIL import Image, ImageDraw, ImageFont
 from tempfile import SpooledTemporaryFile
 from mongoengine import Document, EmbeddedDocument, fields
+from math import log2
 
 import datetime
 import string
 import logging
+import random
 
 from gameBot.models import TgUser, Word
 from gameBot.redisHelper import redis_cached
 from gameBot.themes import get_theme
+
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -149,8 +152,8 @@ class WordSquadGame(Document):
         )
 
     @classmethod
-    def start(cls, channel_id, length):
-        if length == 0:
+    def start(cls, channel_id, length: str):
+        if length == 'trial':
             picked_word = Word.pick_trial()
         else:
             picked_word = Word.pick_one(length)
@@ -182,7 +185,7 @@ class WordSquadGame(Document):
                 else:
                     records[k] = v
         return (
-            f'Leaderboard({days} days) of this channel:\n' +
+            f'GS Leaderboard({days} days) of this channel:\n' +
             top_players(records)
         )
 
@@ -263,8 +266,8 @@ class TgChannel(Document):
     def current_game(self):
       if self.current_game_type == 'WordSquadGame':
         return WordSquadGame.objects(pk=self.current_game_id).first()
-      else:
-        return None
+      elif self.current_game_type == 'FofGame':
+        return FofGame.objects(pk=self.current_game_id).first()
 
     def start_game(self, game):
       self.current_game_type = game.__class__.__name__
@@ -283,3 +286,124 @@ class TgChannel(Document):
 
     def in_trial_mode(self):
       return self.games_counter < 10
+
+class FofGame(Document):
+    channel_id = fields.IntField()
+    secret_word = fields.StringField()
+    synonyms = fields.ListField(fields.StringField(), default=[])
+    antonyms = fields.ListField(fields.StringField(), default=[])
+    revealed = fields.ListField(fields.StringField(), default=[])
+    solved = fields.BooleanField(default=False)
+    scores = fields.DictField(default = {})
+    created_at = fields.DateTimeField(default=datetime.datetime.utcnow)
+    guesses = fields.EmbeddedDocumentListField(WordGuess)
+    rating = ''
+    difficulty = 'Normal'
+    disclosed_chars = 0
+
+    meta = {
+        'indexes': ['channel_id', 'solved']
+    }
+
+    def __str__(self):
+        return f'{self.channel_id}:{self.secret_word}:{self.solved}'
+
+    def add_score(self, user: TgUser, score: int) -> None:
+        if user.name in self.scores.keys():
+            self.scores[user.name] += score
+        else:
+            self.scores[user.name] = score
+
+    def add_guess(self, guess: WordGuess) -> None:
+        self.guesses.append(guess)
+        if guess.guess == self.secret_word:
+            self.solved = True
+            self.add_score(guess.by_user, SCORES['game'])
+        elif guess.guess in self.synonyms or guess.guess in self.antonyms:
+            self.add_score(guess.by_user, SCORES['splash'])
+        self.save()
+
+    def bonus_points(self):
+        return max(50 - 5 * len(self.guesses), 0)
+
+    def print_score(self):
+        return (
+            'Game scores: \n' +
+            top_players(self.scores)
+        )
+
+    def disclose_char(self, counter):
+        self.disclosed_chars = int(log2(counter)) if counter > 0 else 0
+        logger.info(f'counter: {counter}, disclosed_chars: {self.disclosed_chars}')
+
+    def draw(self, theme, size=100):
+        with SpooledTemporaryFile() as in_memory_file:
+            word = str(self.secret_word)
+            length = len(word)
+            img = Image.new('RGB', (size * length, int(size * length * 0.4)), color = get_theme(theme)['bg'])
+            font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.9))
+            draw = ImageDraw.Draw(img)
+            # main letters
+            for idx, char in enumerate(self.secret_word[:self.disclosed_chars] + '?' * (length - self.disclosed_chars)):
+                draw.rectangle([int(size * (0.05 + idx)), int(size * 0.07), int(size * (idx + 0.9)) , int(size * 0.97)], outline='grey', width=3, fill=get_theme(theme)['fill_colors'][0 if char == '?' else 2])
+                draw.text((int(size * (0.15 + idx)), 0), char.upper(), font=font, fill=get_theme(theme)['font_colors'][0 if char == '?' else 2])
+            # available letters
+            font = ImageFont.truetype("nk57-monospace-no-rg.ttf", int(size * 0.2))
+            hints = ''
+            line_count = 0
+            for i in self.revealed:
+                if line_count > 20:
+                    hints += f'\n{i} '
+                    line_count = len(i) + 1
+                else:
+                    hints += f'{i} '
+                    line_count += len(i) + 1
+            draw.text((int(size * 0.1), int(size * 1.1)), hints, font=font, fill=get_theme(theme)['font_colors'][3], spacing=4)
+
+            img.save(in_memory_file, 'png')
+            in_memory_file.seek(0)
+            png_data = in_memory_file.read()
+            return png_data
+
+    @classmethod
+    def start(cls, channel_id):
+        game = FofGame()
+        secret_word = Word.pick_fof()
+        game.channel_id = channel_id
+        game.secret_word = secret_word.word.lower()
+        game.synonyms = secret_word.synonyms
+        game.antonyms = secret_word.antonyms
+        game.rating = secret_word.rating()
+        game.difficulty = secret_word.difficulty()
+        # give 3 synonyms as hints
+        for i in range(3):
+            if len(game.synonyms) == 0:
+                break
+            hint = random.choice(game.synonyms)
+            game.revealed.append(hint)
+            game.synonyms.remove(hint)
+        # give 2 antonyms as hints
+        for i in range(2):
+            if len(game.antonyms) == 0:
+                break
+            hint = random.choice(game.antonyms)
+            game.revealed.append(hint)
+            game.antonyms.remove(hint)
+        game.save()
+        return game
+
+    @classmethod
+    @redis_cached
+    def total_points(cls, channel_id, days=30):
+        from_date = datetime.datetime.today() - datetime.timedelta(days)
+        records = {}
+        for game in cls.objects(channel_id=channel_id, solved=True, created_at__gte=from_date).all():
+            for k, v in game.scores.items():
+                if k in records.keys():
+                    records[k] += v
+                else:
+                    records[k] = v
+        return (
+            f'FoF Leaderboard({days} days) of this channel:\n' +
+            top_players(records)
+        )

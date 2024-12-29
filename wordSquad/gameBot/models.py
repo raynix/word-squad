@@ -84,7 +84,7 @@ class Word(Document):
     logger.info(f"Synonyms for {self.word}: {self.synonyms}")
     self.prepare_antonyms()
     logger.info(f"Antonyms for {self.word}: {self.antonyms}")
-    self.fof = FofState.ready if len(self.synonyms) > 0 and len(self.antonyms) > 0 else FofState.failed
+    self.fof = FofState.ready if len(self.synonyms) > 1 and len(self.antonyms) > 1 else FofState.failed
     self.save()
 
   def full_meanings(self):
@@ -130,6 +130,23 @@ class Word(Document):
     pipeline = [
       {
         "$match": {"word": {"$regex": f"^[a-zA-Z]{{{length}}}$" }}
+      },
+      {
+        "$sample": {"size": 1}
+      }
+    ]
+    for row in cls.objects.aggregate(pipeline):
+      #print(row)
+      picked = cls.objects.get(id=row["_id"])
+      break
+    return picked
+
+  @classmethod
+  def pick_fof(cls):
+    picked = None
+    pipeline = [
+      {
+        "$match": {"fof": FofState.ready.value }
       },
       {
         "$sample": {"size": 1}

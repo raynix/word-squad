@@ -32,7 +32,10 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         '- Yellow means correct letter but in wrong place\n' +
         '- Purple means correct letter in correct place\n' +
         '- Green letters at bottom are the potential ones for this game\n' +
-        'Get all letters purple to win.'
+        'Get all letters purple to win.\n\n' +
+        'Use /fof to start a Friend or Foe game, you will see random synonyms and antonyms\n' +
+        'as clues to guess the secret word. Letters will be revealed after a few guesses, \n' +
+        'but bonus points will be reduced too.'
     )
 
 async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -51,7 +54,8 @@ def main() -> None:
     # application.add_handler(CommandHandler('debug', debug))
     # application.add_handler(CommandHandler('test', test))
     application.add_handler(CommandHandler('game', game))
-    application.add_handler(CallbackQueryHandler(game_callback, pattern='^game:[0-9]$'))
+    application.add_handler(CommandHandler('fof', fof_game))
+    application.add_handler(CallbackQueryHandler(game_callback, pattern='^game:[-0-9]+$'))
     application.add_handler(CommandHandler('endgame', endgame))
     application.add_handler(CommandHandler('giveup', endgame))
     application.add_handler(CommandHandler('gamescore', game_score))

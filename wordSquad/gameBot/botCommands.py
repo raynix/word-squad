@@ -48,7 +48,7 @@ async def game(update: Update, context: CallbackContext) -> None:
     choices = [
         [InlineKeyboardButton("Classic: 5 letters", callback_data="game:5")],
         [InlineKeyboardButton("Advanced: 6 letters", callback_data="game:6")],
-        [InlineKeyboardButton("Hardcore: 7 letters", callback_data="game:7")]
+        [InlineKeyboardButton("Hardcore: 7 letters", callback_data="game:7")],
     ]
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = channel.current_game()
@@ -62,7 +62,7 @@ async def game(update: Update, context: CallbackContext) -> None:
             channel.games_counter = WordSquadGame.objects(channel_id=channel.tg_id).count()
             channel.save()
         if channel.in_trial_mode():
-            channel.start_game(WordSquadGame.start(channel.tg_id, 0))
+            channel.start_game(WordSquadGame.start(channel.tg_id, 'trial'))
             channel.save()
             logger.info(channel)
             await update.message.reply_text(f"Started in trial mode, play {10 - channel.games_counter} more games to unlock all words.")
@@ -74,6 +74,15 @@ async def game(update: Update, context: CallbackContext) -> None:
     else:
         await update.message.reply_text(f'There\'s already an ongoing name: {len(game_session.secret_word)} letters. You can use /giveup to quit it.')
 
+async def fof_game(update: Update, context: CallbackContext) -> None:
+    channel = TgChannel.find_or_create(update.effective_chat.id)
+    game_session = channel.current_game()
+    if game_session is None:
+        game_session = FofGame.start(channel.tg_id)
+        channel.start_game(game_session)
+        photo_message = await update.message.reply_photo(game_session.draw(channel.theme, size=200), caption='Find the word!')
+        cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
+
 async def game_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     data = query.data.split(':')
@@ -84,12 +93,13 @@ async def game_callback(update: Update, context: CallbackContext) -> None:
     game_session = channel.current_game()
     if game_session is None:
         game_session = WordSquadGame.start(channel.tg_id, length)
+        edit_message = f"""
+            New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}
+            Rating: {game_session.rating}
+            Max prize: {game_session.bonus_points()} points, good luck!
+        """
         channel.start_game(game_session)
-        await query.edit_message_text(
-            f'New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n' +
-            f'Rating: {game_session.rating}\n' +
-            f'Prize: {game_session.bonus_points()} points, good luck!'
-        )
+        await query.edit_message_text(edit_message)
 
 async def endgame(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
@@ -124,8 +134,23 @@ async def guess(update: Update, context: CallbackContext) -> None:
             return
         new_guess = WordGuess(guess=text, by_user=user)
         game_session.add_guess(new_guess)
-        photo_message = await message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
-        cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
+        # WordSquadGame only
+        if type(game_session) == WordSquadGame:
+            photo_message = await message.reply_photo(new_guess.draw(available_letters=game_session.available_letters, theme=channel.theme, size=200), reply_to_message_id=message.message_id)
+            cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
+        elif type(game_session) == FofGame:
+            logger.info('fof guess started')
+            # show 1 more hint
+            if text == game_session.secret_word:
+                game_session.disclosed_chars = 5
+                photo_message = await message.reply_photo(game_session.draw(channel.theme, size=200))
+                cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
+            else:
+                counter = len(game_session.guesses)
+                if counter in [2, 4, 8, 16]:
+                    game_session.disclose_char(counter)
+                    photo_message = await message.reply_photo(game_session.draw(channel.theme, size=200))
+                    cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
         if text == game_session.secret_word:
             await message.reply_text(
                 f"You got it! It is '{text}'!"
@@ -234,10 +259,12 @@ async def info(update: Update, context: CallbackContext) -> None:
 async def leaderboard(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     await update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id))
+    await update.message.reply_text(FofGame.total_points(channel_id=channel_id))
 
 async def leaderboard_year(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
     await update.message.reply_text(WordSquadGame.total_points(channel_id=channel_id, days=365))
+    await update.message.reply_text(FofGame.total_points(channel_id=channel_id, days=365))
 
 async def hint(update: Update, context: CallbackContext) -> None:
     channel_id = update.effective_chat.id
