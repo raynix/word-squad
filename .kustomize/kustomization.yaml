@@ -12,4 +12,4 @@ resources:
 
 images:
   - name: ghcr.io/raynix/word-squad
-    newTag: dev-12532202542
+    newTag: dev-12535568271
