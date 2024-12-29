@@ -110,11 +110,7 @@ class Word(Document):
 
   @classmethod
   def find(cls, word):
-    results = cls.objects(word__iexact=word)
-    if len(results) > 0:
-        return results[0]
-    else:
-        return None
+    return cls.objects(word__iexact=word).first()
 
   @classmethod
   def is_english(cls, input):

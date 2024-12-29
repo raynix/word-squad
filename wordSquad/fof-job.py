@@ -23,7 +23,7 @@ batch_interval = int(os.environ.get('BATCH_INTERVAL', 10))
 
 def main() -> None:
     for i in range(batch_size):
-        word = Word.pick_one(5)
+        word = Word.pick_one(6)
         logger.info(f"Processing thesaurus for word: {word.word}:{word.fof}...")
         if word.fof == FofState.ready:
             logger.info(f"Word {word.word} has been processed, skipping...")

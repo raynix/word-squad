@@ -33,7 +33,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         '- Purple means correct letter in correct place\n' +
         '- Green letters at bottom are the potential ones for this game\n' +
         'Get all letters purple to win.\n\n' +
-        'Use /fof to start a Friend or Foe game, you will see random synonyms and antonyms\n' +
+        'Use /fof to start a Friend or Foe game(still in development), you will see random synonyms and antonyms\n' +
         'as clues to guess the secret word. Letters will be revealed after a few guesses, \n' +
         'but bonus points will be reduced too.'
     )

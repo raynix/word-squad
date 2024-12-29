@@ -78,7 +78,7 @@ class WordSquadGame(Document):
     rating = ''
 
     meta = {
-        'indexes': ['channel_id', 'solved']
+        'indexes': ['channel_id', 'solved', 'created_at']
     }
 
     bonus = {

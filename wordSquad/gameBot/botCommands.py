@@ -16,7 +16,7 @@ from random import choice
 
 DEVELOPER_CHAT_ID = 1262447783
 WORD_NOT_FOUND = [
-    "Guess it's a word but it's not in my dictionary. You can reply the word and use /suggest to add it, if you wish",
+    "Guess it's a word but it's not in my dictionary. You can reply to the word and use /suggest to add it, if you wish",
 ]
 
 logging.basicConfig(
@@ -93,11 +93,11 @@ async def game_callback(update: Update, context: CallbackContext) -> None:
     game_session = channel.current_game()
     if game_session is None:
         game_session = WordSquadGame.start(channel.tg_id, length)
-        edit_message = f"""
-            New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}
-            Rating: {game_session.rating}
-            Max prize: {game_session.bonus_points()} points, good luck!
-        """
+        synonyms = Word.find(game_session.secret_word).synonyms
+        edit_message = (f"New game started: {len(game_session.secret_word)} letters. Difficulty: {game_session.difficulty}\n"
+                        f"Rating: {game_session.rating}\n"
+                        f"Max prize: {game_session.bonus_points()} points, good luck!\n"
+                        f"Hint: {', '.join(synonyms[:3])}")
         channel.start_game(game_session)
         await query.edit_message_text(edit_message)
 
