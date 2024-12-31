@@ -216,10 +216,23 @@ class WordSquadGame(Document):
     @redis_cached
     def active_channels(cls, days=7):
         from_date = datetime.datetime.today() - datetime.timedelta(days=days)
-        channels = [str(x) for x in cls.objects(created_at__gte=from_date).distinct(field='channel_id')]
+        pipeline = [
+            {
+                "$match": { "created_at": { "$gte": from_date}}
+            },
+            {
+                "$group": {
+                    "_id": "$channel_id",
+                    "count": { "$sum": 1}
+                }
+            },
+            {
+                "$sort": { "count": -1 }
+            }
+        ]
         return (
             f"Active channels in the past {days} days:\n" +
-            "\n".join(channels)
+            "\n".join([ f"{row['_id']}: {row['count']}" for row in cls.objects.aggregate(pipeline)])
         )
 
     @classmethod
