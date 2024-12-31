@@ -239,6 +239,8 @@ async def stats(update: Update, context: CallbackContext) -> None:
         WordSquadGame.channel_rank(channel_id) + '\n' +
         WordSquadGame.histogram()
     )
+    if update.effective_user.id == DEVELOPER_CHAT_ID:
+        await update.message.reply_text(WordSquadGame.active_channels(days=30))
 
 async def info(update: Update, context: CallbackContext) -> None:
     try:

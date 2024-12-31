@@ -214,6 +214,16 @@ class WordSquadGame(Document):
 
     @classmethod
     @redis_cached
+    def active_channels(cls, days=7):
+        from_date = datetime.datetime.today() - datetime.timedelta(days=days)
+        channels = [str(x) for x in cls.objects(created_at__gte=from_date).distinct(field='channel_id')]
+        return (
+            f"Active channels in the past {days} days:\n" +
+            "\n".join(channels)
+        )
+
+    @classmethod
+    @redis_cached
     def channel_rank(cls, channel_id, days=365):
         from_date = datetime.datetime.today() - datetime.timedelta(days=days)
         pipeline = [
