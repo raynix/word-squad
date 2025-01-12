@@ -26,3 +26,20 @@ spec:
             host: word-squad
             port:
               number: 8000
+
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+  name: word-squad
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: kubernetes-gateway
+      namespace: istio-system
+  hostnames:
+    - wordsquad.awes.one
+  rules:
+    - backendRefs:
+        - name: word-squad
+          port: 8000
