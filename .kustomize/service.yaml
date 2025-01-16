@@ -10,22 +10,6 @@ spec:
       protocol: TCP
   selector:
     app: word-squad
----
-apiVersion: networking.istio.io/v1beta1
-kind: VirtualService
-metadata:
-  name: word-squad
-spec:
-  gateways:
-    - istio-system/awes-gateway
-  hosts:
-    - wordsquad.awes.one
-  http:
-    - route:
-        - destination:
-            host: word-squad
-            port:
-              number: 8000
 
 ---
 apiVersion: gateway.networking.k8s.io/v1beta1
