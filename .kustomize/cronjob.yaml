@@ -25,6 +25,8 @@ spec:
                   value: "65"
                 - name: BATCH_INTERVAL
                   value: "24"
+                - name: WORD_LENGTH
+                  value: "7"
               resources:
                 requests:
                   memory: 200Mi

@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 
 batch_size = int(os.environ.get('BATCH_SIZE', 100))
 batch_interval = int(os.environ.get('BATCH_INTERVAL', 10))
+word_length = int(os.environ.get('WORD_LENGTH', 7))
 
 def main() -> None:
     for i in range(batch_size):
-        word = Word.pick_one(6)
+        word = Word.pick_one(word_length)
         logger.info(f"Processing thesaurus for word: {word.word}:{word.fof}...")
         if word.fof == FofState.ready:
             logger.info(f"Word {word.word} has been processed, skipping...")
