@@ -12,7 +12,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
 
-from random import choice
+import random
 
 DEVELOPER_CHAT_ID = 1262447783
 WORD_NOT_FOUND = [
@@ -126,10 +126,11 @@ async def guess(update: Update, context: CallbackContext) -> None:
     logger.debug(f'guessed {text} by {user.name}')
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = channel.current_game()
+    counter = len(game_session.guesses)
     logger.debug(game_session)
     if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
         if not Word.is_english(text):
-            warning = await message.reply_text(choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
+            warning = await message.reply_text(random.choice(WORD_NOT_FOUND), reply_to_message_id=message.message_id)
             cache_guess(channel.tg_id, game_session.pk, warning.message_id)
             return
         new_guess = WordGuess(guess=text, by_user=user)
@@ -146,7 +147,6 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 photo_message = await message.reply_photo(game_session.draw(channel.theme, size=200))
                 cache_guess(channel.tg_id, game_session.pk, photo_message.message_id)
             else:
-                counter = len(game_session.guesses)
                 if counter in [2, 4, 8, 16]:
                     game_session.disclose_char(counter)
                     photo_message = await message.reply_photo(game_session.draw(channel.theme, size=200))
@@ -182,6 +182,10 @@ async def guess(update: Update, context: CallbackContext) -> None:
                 "Would you like to clean up images of this game?",
                 reply_markup=InlineKeyboardMarkup(choices)
             )
+        else:
+            if counter == 6 or counter > 6 and random.random() > 0.8:
+                await message.reply_text("Maybe I got this weird word, or not a word at all. Feel free to use /quit command to start over.")
+
 
 async def guess_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
