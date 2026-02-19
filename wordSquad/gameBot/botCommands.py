@@ -126,7 +126,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
     logger.debug(f'guessed {text} by {user.name}')
     channel = TgChannel.find_or_create(update.effective_chat.id)
     game_session = channel.current_game()
-    counter = len(game_session.guesses)
+    counter = game_session and len(game_session.guesses) or 0
     logger.debug(game_session)
     if game_session and text.isalpha() and len(text) == len(game_session.secret_word):
         if not Word.is_english(text):
@@ -184,7 +184,7 @@ async def guess(update: Update, context: CallbackContext) -> None:
             )
         else:
             if counter == 6 or counter > 6 and random.random() > 0.8:
-                await message.reply_text("Maybe I got this weird word, or not a word at all. Feel free to use /quit command to start over.")
+                await message.reply_text("Maybe I got this weird word, or not a word at all. Feel free to use /giveup command to start over.")
 
 
 async def guess_callback(update: Update, context: CallbackContext) -> None:
